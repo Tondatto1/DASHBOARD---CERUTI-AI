@@ -1,0 +1,6 @@
+{
+  "name": "Ceruti AI Dashboard",
+  "description": "Dashboard de Gestão de Acessos para clientes Ceruti AI",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
