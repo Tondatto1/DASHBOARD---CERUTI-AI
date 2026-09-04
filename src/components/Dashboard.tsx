@@ -394,6 +394,47 @@ export function Dashboard({ onLogout }: DashboardProps) {
             />
           ) : activeTab === 'equipe' ? (
             <>
+              {/* Highlighted Quota Card (Cota de Uso) */}
+              <motion.div 
+                initial={{ opacity: 0, y: 12 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="relative overflow-hidden bg-white p-6 sm:p-7 rounded-2xl border border-emerald-100/90 shadow-sm hover:scale-105 hover:shadow-xl hover:z-10 transition-all duration-300 shrink-0 group cursor-default"
+              >
+                {/* Subtle decorative background glow */}
+                <div className="absolute top-0 right-0 w-96 h-full bg-gradient-to-l from-emerald-50/70 via-transparent to-transparent pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                  {/* Left Column: Title & active count */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-50 text-[#00a83e] border border-emerald-200/60">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#00a83e] mr-1.5 animate-pulse" />
+                        Cota de Uso dos Acessos
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-baseline gap-3">
+                      <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
+                        {activeCount}
+                        <span className="text-lg sm:text-xl font-bold text-slate-400 ml-1">/ {MOCK_PLAN.maxAccesses}</span>
+                      </h3>
+                      <span className="text-sm font-semibold text-slate-600">
+                        vendedores ativos
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Quick stat chip */}
+                  <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+                    <div className="bg-emerald-50/60 border border-emerald-200/70 rounded-xl px-4 py-2.5 text-center min-w-[90px] shadow-2xs">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-700 block mb-0.5">Disponíveis</span>
+                      <span className="text-lg font-black text-[#00a83e]">{MOCK_PLAN.maxAccesses - activeCount}</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
               {/* WhatsApp Management */}
               <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col flex-1 overflow-visible min-h-0">
                 <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/50 shrink-0">
