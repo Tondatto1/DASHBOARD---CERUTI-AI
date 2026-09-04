@@ -7,14 +7,25 @@ import {
   Activity,
   Users,
   X,
-  CreditCard,
   Smartphone,
   MessageSquare,
+  LayoutDashboard,
+  MoreVertical,
+  Pencil,
+  Clock,
+  Phone,
+  Search,
+  Calendar,
+  Briefcase,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Salesperson, PlanInfo, ChatMessage } from "../types";
 import { Logo } from "./Logo";
 import Prism from "./Prism";
+import { Overview } from "./Overview";
+import { SellerMonitoring } from "./SellerMonitoring";
+import { CalendarView } from "./CalendarView";
+import { CRMView } from "./CRMView";
 
 const COUNTRIES = [
   { code: "+55", flag: "br", name: "Brasil" },
@@ -63,7 +74,11 @@ const INITIAL_SALESPEOPLE: Salesperson[] = [
     status: "Ativo",
     messageCount: 145,
     lastConversation: "Hoje, 10:36",
+    plansGeneratedMonth: 82,
     history24h: MOCK_HISTORY_1,
+    calendarIntegration: {
+      status: "disconnected",
+    },
   },
   {
     id: "2",
@@ -72,16 +87,28 @@ const INITIAL_SALESPEOPLE: Salesperson[] = [
     status: "Ativo",
     messageCount: 89,
     lastConversation: "Ontem, 18:45",
+    plansGeneratedMonth: 66,
     history24h: MOCK_HISTORY_2,
+    calendarIntegration: {
+      status: "connected",
+      provider: "google",
+      email: "maria.oliveira@ceruti.com.br",
+      connectedAt: "Ontem, 14:20",
+      lastSync: "Há 15 min",
+    },
   },
   {
     id: "3",
     name: "Carlos Sousa",
     whatsapp: "+55 21 99999-8888",
-    status: "Inativo",
+    status: "Ativo",
     messageCount: 0,
     lastConversation: "Sem registros",
+    plansGeneratedMonth: 0,
     history24h: [],
+    calendarIntegration: {
+      status: "disconnected",
+    },
   },
 ];
 
@@ -96,14 +123,75 @@ export function Dashboard({ onLogout }: DashboardProps) {
   const [newName, setNewName] = useState("");
   const [newDDI, setNewDDI] = useState("+55");
   const [newWhatsapp, setNewWhatsapp] = useState("");
-  const [activeTab, setActiveTab] = useState<'equipe' | 'monitoramento'>('equipe');
+  const [activeTab, setActiveTab] = useState<'visao-geral' | 'equipe' | 'monitoramento' | 'calendario' | 'crm'>('visao-geral');
   const [historyModalPerson, setHistoryModalPerson] = useState<Salesperson | null>(null);
+  const [openActionDropdownId, setOpenActionDropdownId] = useState<string | null>(null);
+  const [editingWhatsappPerson, setEditingWhatsappPerson] = useState<Salesperson | null>(null);
+  const [deletingPerson, setDeletingPerson] = useState<Salesperson | null>(null);
+  const [editDDI, setEditDDI] = useState("+55");
+  const [editWhatsapp, setEditWhatsapp] = useState("");
+  const [isEditDDIDropdownOpen, setIsEditDDIDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredSalespeople = salespeople.filter((s) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return s.name.toLowerCase().includes(q) || s.whatsapp.toLowerCase().includes(q);
+  });
 
   const activeCount = salespeople.filter((s) => s.status === "Ativo").length;
   const usagePercentage = (activeCount / MOCK_PLAN.maxAccesses) * 100;
 
   const handleDelete = (id: string) => {
     setSalespeople(salespeople.filter((s) => s.id !== id));
+    if (openActionDropdownId === id) {
+      setOpenActionDropdownId(null);
+    }
+    if (deletingPerson?.id === id) {
+      setDeletingPerson(null);
+    }
+  };
+
+  const handleOpenEditWhatsapp = (person: Salesperson) => {
+    setOpenActionDropdownId(null);
+    setEditingWhatsappPerson(person);
+    const match = person.whatsapp.match(/^(\+\d{1,4})\s*(.*)$/);
+    if (match) {
+      setEditDDI(match[1]);
+      setEditWhatsapp(match[2]);
+    } else {
+      setEditDDI("+55");
+      setEditWhatsapp(person.whatsapp);
+    }
+  };
+
+  const handleEditPhoneChange = (val: string) => {
+    const raw = val.replace(/\D/g, "");
+    if (editDDI === "+55") {
+      const ddd = raw.slice(0, 2);
+      const p1 = raw.slice(2, 7);
+      const p2 = raw.slice(7, 11);
+      let res = "";
+      if (ddd) res += ddd;
+      if (p1) res += ` ${p1}`;
+      if (p2) res += `-${p2}`;
+      setEditWhatsapp(res);
+    } else {
+      setEditWhatsapp(raw);
+    }
+  };
+
+  const handleSaveEditWhatsapp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingWhatsappPerson || !editWhatsapp.trim()) return;
+    const fullPhone = `${editDDI} ${editWhatsapp.trim()}`;
+    setSalespeople(
+      salespeople.map((s) =>
+        s.id === editingWhatsappPerson.id ? { ...s, whatsapp: fullPhone } : s
+      )
+    );
+    setEditingWhatsappPerson(null);
+    setIsEditDDIDropdownOpen(false);
   };
 
   const handlePhoneChange = (val: string) => {
@@ -138,6 +226,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
       status: "Ativo",
       messageCount: 0,
       lastConversation: "Sem registros",
+      plansGeneratedMonth: 0,
       history24h: [],
     };
 
@@ -158,6 +247,13 @@ export function Dashboard({ onLogout }: DashboardProps) {
         </div>
         <nav className="flex-1 px-4 space-y-1">
           <button 
+            onClick={() => setActiveTab('visao-geral')}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 ${activeTab === 'visao-geral' ? 'bg-emerald-50 text-[#00a83e]' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900/80'}`}
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            <span>Visão geral</span>
+          </button>
+          <button 
             onClick={() => setActiveTab('equipe')}
             className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 ${activeTab === 'equipe' ? 'bg-emerald-50 text-[#00a83e]' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900/80'}`}
           >
@@ -170,6 +266,20 @@ export function Dashboard({ onLogout }: DashboardProps) {
           >
             <Activity className="w-5 h-5" />
             <span>Monitoramento</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('calendario')}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 ${activeTab === 'calendario' ? 'bg-emerald-50 text-[#00a83e]' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900/80'}`}
+          >
+            <Calendar className="w-5 h-5" />
+            <span>Calendário</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('crm')}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 ${activeTab === 'crm' ? 'bg-emerald-50 text-[#00a83e]' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900/80'}`}
+          >
+            <Briefcase className="w-5 h-5" />
+            <span>CRM</span>
           </button>
         </nav>
         <div className="p-6 border-t border-slate-100 items-center flex justify-between">
@@ -209,7 +319,15 @@ export function Dashboard({ onLogout }: DashboardProps) {
             <span className="text-lg font-bold tracking-tight text-slate-900 hidden sm:block">Ceruti</span>
           </div>
           <h1 className="text-lg font-bold text-slate-900 hidden md:block">
-            {activeTab === 'equipe' ? 'Gestão de Acessos' : 'Monitoramento de Conversas'}
+            {activeTab === 'visao-geral'
+              ? 'Visão Geral'
+              : activeTab === 'equipe'
+              ? 'Gestão de Acessos'
+              : activeTab === 'monitoramento'
+              ? 'Monitoramento Individual dos Vendedores'
+              : activeTab === 'calendario'
+              ? 'Integração de Calendário'
+              : 'Gestão de CRM e Pipeline Agro'}
           </h1>
           <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
             {activeTab === 'equipe' && (
@@ -230,180 +348,277 @@ export function Dashboard({ onLogout }: DashboardProps) {
         </header>
 
         {/* Mobile Tabs */}
-        <div className="flex md:hidden border-b border-slate-200 bg-white/90 backdrop-blur-md shrink-0 relative z-10">
+        <div className="flex md:hidden border-b border-slate-200 bg-white/90 backdrop-blur-md shrink-0 relative z-10 overflow-x-auto">
+          <button 
+            onClick={() => setActiveTab('visao-geral')}
+            className={`flex-1 min-w-[90px] py-3 text-xs sm:text-sm font-semibold text-center border-b-2 ${activeTab === 'visao-geral' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
+          >
+            Visão geral
+          </button>
           <button 
             onClick={() => setActiveTab('equipe')}
-            className={`flex-1 py-3 text-sm font-semibold text-center border-b-2 ${activeTab === 'equipe' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
+            className={`flex-1 min-w-[70px] py-3 text-xs sm:text-sm font-semibold text-center border-b-2 ${activeTab === 'equipe' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
           >
             Equipe
           </button>
           <button 
             onClick={() => setActiveTab('monitoramento')}
-            className={`flex-1 py-3 text-sm font-semibold text-center border-b-2 ${activeTab === 'monitoramento' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
+            className={`flex-1 min-w-[110px] py-3 text-xs sm:text-sm font-semibold text-center border-b-2 ${activeTab === 'monitoramento' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
           >
             Monitoramento
+          </button>
+          <button 
+            onClick={() => setActiveTab('calendario')}
+            className={`flex-1 min-w-[90px] py-3 text-xs sm:text-sm font-semibold text-center border-b-2 ${activeTab === 'calendario' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
+          >
+            Calendário
+          </button>
+          <button 
+            onClick={() => setActiveTab('crm')}
+            className={`flex-1 min-w-[70px] py-3 text-xs sm:text-sm font-semibold text-center border-b-2 ${activeTab === 'crm' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
+          >
+            CRM
           </button>
         </div>
 
         <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 flex-1 overflow-auto flex flex-col relative z-10">
-          {activeTab === 'equipe' ? (
+          {activeTab === 'visao-geral' ? (
+            <Overview
+              salespeople={salespeople}
+              maxAccesses={MOCK_PLAN.maxAccesses}
+              onActivateSalesperson={(id) => {
+                setSalespeople(
+                  salespeople.map((s) => (s.id === id ? { ...s, status: 'Ativo' } : s))
+                );
+              }}
+            />
+          ) : activeTab === 'equipe' ? (
             <>
-              {/* Top Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 shrink-0">
-                {/* Plan Card */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                  className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:border-emerald-200 hover:shadow-md hover:-translate-y-1 transition-all duration-300"
-                >
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Plano Atual</p>
-                    <h3 className="text-2xl font-bold text-slate-900">{MOCK_PLAN.name}</h3>
-                    <p className="text-xs text-[#0070f3] font-medium">Renovação: 01/Dez/2026</p>
-                  </div>
-                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-[#0070f3]">
-                    <CreditCard className="w-6 h-6" />
-                  </div>
-                </motion.div>
-
-                {/* Quota Card */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                  className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-emerald-200 hover:shadow-md hover:-translate-y-1 transition-all duration-300"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cota de Uso</p>
-                    <span className="text-xs font-bold text-slate-900">{activeCount} de {MOCK_PLAN.maxAccesses} acessos</span>
-                  </div>
-                  
-                  <div className="w-full bg-slate-100 h-2.5 rounded-full mb-2 overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${usagePercentage}%` }}
-                      transition={{ duration: 1, ease: "easeOut" }}
-                      className={`h-full rounded-full ${usagePercentage >= 100 ? 'bg-red-500' : 'bg-[#00a83e]'}`}
-                    ></motion.div>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    Você pode adicionar mais {MOCK_PLAN.maxAccesses - activeCount} vendedores.
-                  </p>
-                </motion.div>
-              </div>
-
               {/* WhatsApp Management */}
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col flex-1 overflow-hidden min-h-0">
-                <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-gray-50/50 shrink-0">
-                  <h4 className="font-bold text-slate-900">Vendedores Cadastrados</h4>
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col flex-1 overflow-visible min-h-0">
+                <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/50 shrink-0">
+                  <div className="flex items-center space-x-2.5">
+                    <h4 className="font-bold text-slate-900 text-base">Vendedores Cadastrados</h4>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-[#00a83e] border border-emerald-200/60">
+                      {filteredSalespeople.length}
+                      {searchQuery.trim() && (
+                        <span className="text-slate-400 font-normal ml-1">de {salespeople.length}</span>
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Lupa de busca por vendedor */}
+                  <div className="flex items-center space-x-3 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-72">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Buscar por vendedor ou telefone..."
+                        className="w-full pl-9 pr-8 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00a83e] focus:border-transparent text-slate-900 placeholder:text-slate-400 transition-all shadow-xs"
+                      />
+                      {searchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setSearchQuery("")}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-100 transition-colors"
+                          title="Limpar busca"
+                          aria-label="Limpar busca"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="overflow-x-auto flex-1">
-                  <table className="w-full text-left border-collapse min-w-[500px]">
+                <div className="overflow-x-auto flex-1 pb-16">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead className="bg-gray-50 text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b border-slate-100 sticky top-0 z-10">
                       <tr>
-                        <th className="px-5 sm:px-6 py-3 whitespace-nowrap">Nome do Vendedor</th>
-                        <th className="px-5 sm:px-6 py-3 whitespace-nowrap">Número WhatsApp</th>
-                        <th className="px-5 sm:px-6 py-3 whitespace-nowrap">Status</th>
-                        <th className="px-5 sm:px-6 py-3 text-right whitespace-nowrap">Ações</th>
+                        <th className="px-5 sm:px-6 py-3.5 whitespace-nowrap">Vendedor</th>
+                        <th className="px-5 sm:px-6 py-3.5 whitespace-nowrap">WhatsApp</th>
+                        <th className="px-5 sm:px-6 py-3.5 whitespace-nowrap">Último Uso</th>
+                        <th className="px-5 sm:px-6 py-3.5 text-right whitespace-nowrap">Ações</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-sm">
                       <AnimatePresence>
-                        {salespeople.length === 0 && (
+                        {filteredSalespeople.length === 0 && (
                           <tr>
-                            <td colSpan={4} className="px-6 py-8 text-center text-slate-500 text-sm">
-                              Nenhum vendedor cadastrado ainda.
+                            <td colSpan={4} className="px-6 py-12 text-center text-slate-500 text-sm">
+                              {searchQuery.trim() ? (
+                                <div className="flex flex-col items-center justify-center space-y-2">
+                                  <Search className="w-8 h-8 text-slate-300" />
+                                  <p className="text-slate-700 font-medium">
+                                    Nenhum vendedor encontrado para "{searchQuery}"
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSearchQuery("")}
+                                    className="text-xs text-[#00a83e] font-semibold hover:underline"
+                                  >
+                                    Limpar filtro de busca
+                                  </button>
+                                </div>
+                              ) : (
+                                "Nenhum vendedor cadastrado no momento."
+                              )}
                             </td>
                           </tr>
                         )}
-                        {salespeople.map((person) => (
-                          <motion.tr
-                            key={person.id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.2 }}
-                            className="hover:bg-emerald-50/50 transition-colors group cursor-default"
-                          >
-                            <td className="px-5 sm:px-6 py-4 font-semibold text-slate-900 whitespace-nowrap group-hover:text-emerald-800 transition-colors">
-                              {person.name}
-                            </td>
-                            <td className="px-5 sm:px-6 py-4 text-slate-600 font-mono whitespace-nowrap group-hover:text-emerald-700 transition-colors">
-                              {person.whatsapp}
-                            </td>
-                            <td className="px-5 sm:px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 py-1 text-[10px] font-bold rounded-md uppercase ${
-                                person.status === "Ativo"
-                                  ? "bg-emerald-100 text-[#00a83e]"
-                                  : "bg-slate-100 text-slate-400"
-                              }`}>
-                                {person.status}
-                              </span>
-                            </td>
-                            <td className="px-5 sm:px-6 py-4 text-right whitespace-nowrap">
-                              <button
-                                onClick={() => handleDelete(person.id)}
-                                className="text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 inline-flex items-center justify-center p-1.5"
-                                title="Remover acesso"
-                              >
-                                <Trash2 className="w-5 h-5 transition-transform group-hover:scale-110" />
-                              </button>
-                            </td>
-                          </motion.tr>
-                        ))}
+                        {filteredSalespeople.map((person, index) => {
+                          const isNearBottom = index >= filteredSalespeople.length - 1 && filteredSalespeople.length > 1;
+                          return (
+                            <motion.tr
+                              key={person.id}
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, x: -20 }}
+                              transition={{ duration: 0.2, delay: index * 0.04 }}
+                              className="hover:bg-emerald-50/40 transition-colors group cursor-default"
+                            >
+                              {/* 1. VENDEDOR */}
+                              <td className="px-5 sm:px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 shrink-0 shadow-xs group-hover:border-emerald-300 group-hover:bg-emerald-50 transition-colors">
+                                    {person.name.charAt(0)}
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <span className="font-semibold text-slate-900 group-hover:text-emerald-800 transition-colors">
+                                      {person.name}
+                                    </span>
+                                    <span
+                                      className={`px-2 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider ${
+                                        person.status === "Ativo"
+                                          ? "bg-emerald-100 text-[#00a83e]"
+                                          : "bg-slate-100 text-slate-400"
+                                      }`}
+                                    >
+                                      {person.status}
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* 2. WHATSAPP */}
+                              <td className="px-5 sm:px-6 py-4 text-slate-600 font-mono text-xs font-medium whitespace-nowrap group-hover:text-emerald-700 transition-colors">
+                                <div className="flex items-center space-x-1.5">
+                                  <Phone className="w-3 h-3 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+                                  <span>{person.whatsapp}</span>
+                                </div>
+                              </td>
+
+                              {/* 3. ÚLTIMO USO */}
+                              <td className="px-5 sm:px-6 py-4 text-slate-600 whitespace-nowrap">
+                                <div className="flex items-center space-x-1.5 text-xs font-medium">
+                                  <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  <span>{person.lastConversation}</span>
+                                </div>
+                              </td>
+
+                              {/* 4. AÇÃO "3 PONTINHOS" (COM OPÇÕES: ALTERAR WHATSAPP E LIXEIRA EXCLUIR) */}
+                              <td className="px-5 sm:px-6 py-4 text-right whitespace-nowrap relative">
+                                <div className="inline-block text-left relative">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenActionDropdownId(
+                                        openActionDropdownId === person.id ? null : person.id
+                                      );
+                                    }}
+                                    className={`p-2 rounded-xl transition-all inline-flex items-center justify-center ${
+                                      openActionDropdownId === person.id
+                                        ? "bg-slate-200 text-slate-900 shadow-xs"
+                                        : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                                    }`}
+                                    title="Opções do vendedor"
+                                    aria-label="Ações do vendedor"
+                                  >
+                                    <MoreVertical className="w-4 h-4" />
+                                  </button>
+
+                                  <AnimatePresence>
+                                    {openActionDropdownId === person.id && (
+                                      <>
+                                        <div
+                                          className="fixed inset-0 z-30"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenActionDropdownId(null);
+                                          }}
+                                        />
+                                        <motion.div
+                                          initial={{ opacity: 0, scale: 0.95, y: isNearBottom ? 4 : -4 }}
+                                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                                          exit={{ opacity: 0, scale: 0.95, y: isNearBottom ? 4 : -4 }}
+                                          transition={{ duration: 0.12 }}
+                                          className={`absolute right-0 w-52 bg-white rounded-2xl shadow-xl shadow-slate-900/15 border border-slate-100 z-40 py-1.5 overflow-hidden text-left ${
+                                            isNearBottom ? "bottom-full mb-1 origin-bottom-right" : "top-full mt-1 origin-top-right"
+                                          }`}
+                                        >
+                                          {/* OPÇÃO 1: ALTERAR WHATSAPP */}
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleOpenEditWhatsapp(person);
+                                            }}
+                                            className="w-full px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-emerald-50/70 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors group"
+                                          >
+                                            <Pencil className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+                                            <span>Alterar WhatsApp</span>
+                                          </button>
+
+                                          <div className="my-1 border-t border-slate-100" />
+
+                                          {/* OPÇÃO 2: LIXEIRA DE REMOVER/EXCLUIR */}
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setOpenActionDropdownId(null);
+                                              setDeletingPerson(person);
+                                            }}
+                                            className="w-full px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center space-x-2.5 transition-colors group"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5 text-red-500 group-hover:scale-110 transition-transform" />
+                                            <span>Excluir vendedor</span>
+                                          </button>
+                                        </motion.div>
+                                      </>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              </td>
+                            </motion.tr>
+                          );
+                        })}
                       </AnimatePresence>
                     </tbody>
                   </table>
                 </div>
               </div>
             </>
+          ) : activeTab === 'monitoramento' ? (
+            <SellerMonitoring salespeople={salespeople} />
+          ) : activeTab === 'calendario' ? (
+            <CalendarView
+              salespeople={salespeople}
+              onUpdateSalespersonCalendar={(salespersonId, integration) => {
+                setSalespeople(
+                  salespeople.map((s) =>
+                    s.id === salespersonId
+                      ? { ...s, calendarIntegration: integration }
+                      : s
+                  )
+                );
+              }}
+            />
           ) : (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col flex-1 overflow-hidden min-h-0">
-              <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-gray-50/50 shrink-0">
-                <h4 className="font-bold text-slate-900">Monitoramento de Conversas</h4>
-              </div>
-
-              <div className="overflow-x-auto flex-1">
-                <table className="w-full text-left border-collapse min-w-[600px]">
-                  <thead className="bg-gray-50 text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b border-slate-100 sticky top-0 z-10">
-                    <tr>
-                      <th className="px-5 sm:px-6 py-3 whitespace-nowrap">Vendedor</th>
-                      <th className="px-5 sm:px-6 py-3 whitespace-nowrap text-center">Mensagens Trocadas</th>
-                      <th className="px-5 sm:px-6 py-3 whitespace-nowrap">Última Conversa</th>
-                      <th className="px-5 sm:px-6 py-3 text-right whitespace-nowrap">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-sm">
-                    {salespeople.map((person) => (
-                      <motion.tr
-                        key={person.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="hover:bg-emerald-50/50 transition-colors group cursor-default"
-                      >
-                        <td className="px-5 sm:px-6 py-4 whitespace-nowrap">
-                          <p className="font-semibold text-slate-900 group-hover:text-emerald-800 transition-colors">{person.name}</p>
-                          <p className="text-xs text-slate-500 font-mono mt-0.5 group-hover:text-emerald-700 transition-colors">{person.whatsapp}</p>
-                        </td>
-                        <td className="px-5 sm:px-6 py-4 text-center whitespace-nowrap font-medium text-slate-700">
-                          {person.messageCount}
-                        </td>
-                        <td className="px-5 sm:px-6 py-4 whitespace-nowrap text-slate-600">
-                          {person.lastConversation}
-                        </td>
-                        <td className="px-5 sm:px-6 py-4 text-right whitespace-nowrap">
-                          <button
-                            onClick={() => setHistoryModalPerson(person)}
-                            className="bg-emerald-50 text-[#00a83e] hover:bg-emerald-600 hover:text-white hover:shadow-md hover:-translate-y-0.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 inline-flex items-center"
-                          >
-                            <MessageSquare className="w-4 h-4 mr-1.5" />
-                            Ver Histórico
-                          </button>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <CRMView />
           )}
         </div>
       </main>
@@ -530,6 +745,200 @@ export function Dashboard({ onLogout }: DashboardProps) {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit WhatsApp Modal */}
+      <AnimatePresence>
+        {editingWhatsappPerson && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs"
+              onClick={() => {
+                setEditingWhatsappPerson(null);
+                setIsEditDDIDropdownOpen(false);
+              }}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 border border-slate-100"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#00a83e] flex items-center justify-center">
+                    <Phone className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">Alterar WhatsApp</h3>
+                    <p className="text-xs text-slate-500">{editingWhatsappPerson.name}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingWhatsappPerson(null);
+                    setIsEditDDIDropdownOpen(false);
+                  }}
+                  className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEditWhatsapp}>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                    Novo Número de WhatsApp
+                  </label>
+                  <div className="flex space-x-2 relative">
+                    <div className="relative shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditDDIDropdownOpen(!isEditDDIDropdownOpen)}
+                        className="w-[104px] px-3 py-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-[#00a83e] focus:border-transparent transition-all duration-200 text-slate-900 text-sm bg-white flex items-center justify-between"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <img
+                            src={`https://flagcdn.com/w20/${COUNTRIES.find(c => c.code === editDDI)?.flag || 'br'}.png`}
+                            alt=""
+                            className="w-5 h-auto object-cover rounded-sm border border-slate-100"
+                          />
+                          <span className="font-semibold">{editDDI}</span>
+                        </div>
+                      </button>
+
+                      <AnimatePresence>
+                        {isEditDDIDropdownOpen && (
+                          <>
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="fixed inset-0 z-40"
+                              onClick={() => setIsEditDDIDropdownOpen(false)}
+                            />
+                            <motion.div
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -5 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute top-full left-0 mt-2 w-56 max-h-60 overflow-y-auto bg-white rounded-xl shadow-xl shadow-slate-900/10 border border-slate-100 z-50 py-1"
+                            >
+                              {COUNTRIES.map((c) => (
+                                <button
+                                  key={c.code}
+                                  type="button"
+                                  onClick={() => {
+                                    setEditDDI(c.code);
+                                    setEditWhatsapp("");
+                                    setIsEditDDIDropdownOpen(false);
+                                  }}
+                                  className={`w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors text-sm text-left ${
+                                    editDDI === c.code ? "bg-emerald-50/50" : ""
+                                  }`}
+                                >
+                                  <img
+                                    src={`https://flagcdn.com/w20/${c.flag}.png`}
+                                    alt={c.name}
+                                    className="w-5 h-auto object-cover rounded-sm border border-slate-100"
+                                  />
+                                  <div className="flex flex-col">
+                                    <span className="font-semibold text-slate-700 leading-tight">
+                                      {c.code}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 leading-tight">
+                                      {c.name}
+                                    </span>
+                                  </div>
+                                </button>
+                              ))}
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                    <input
+                      type="tel"
+                      required
+                      value={editWhatsapp}
+                      onChange={(e) => handleEditPhoneChange(e.target.value)}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-[#00a83e] focus:border-transparent transition-all duration-200 text-slate-900 text-sm font-mono placeholder:font-sans"
+                      placeholder={editDDI === "+55" ? "11 9XXXX-XXXX" : "Número"}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-8 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingWhatsappPerson(null);
+                      setIsEditDDIDropdownOpen(false);
+                    }}
+                    className="px-5 py-2.5 rounded-xl hover:bg-slate-50 text-slate-700 font-semibold transition-colors text-sm"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-[#00a83e] hover:bg-emerald-700 hover:shadow-lg hover:-translate-y-0.5 text-white font-semibold shadow-md shadow-emerald-500/20 transition-all duration-200 text-sm"
+                  >
+                    Salvar Alteração
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deletingPerson && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs"
+              onClick={() => setDeletingPerson(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl relative z-10 border border-slate-100 text-center"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Excluir Vendedor</h3>
+              <p className="text-xs sm:text-sm text-slate-500 mt-2">
+                Tem certeza que deseja remover o acesso de <strong className="text-slate-800">{deletingPerson.name}</strong> ({deletingPerson.whatsapp})?
+              </p>
+              <div className="mt-6 flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setDeletingPerson(null)}
+                  className="flex-1 px-4 py-2.5 rounded-xl hover:bg-slate-100 text-slate-700 font-semibold transition-colors text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(deletingPerson.id)}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-md shadow-red-500/20 transition-all text-sm"
+                >
+                  Confirmar Exclusão
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
