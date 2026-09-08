@@ -79,7 +79,27 @@ export type CRMStage =
   | 'Resgates'
   | 'Vendas'
   | 'Recorrência'
-  | 'Finalizados';
+  | 'Finalizados'
+  | string;
+
+export interface CRMTag {
+  id: string;
+  name: string;
+  color: string; // e.g. 'emerald', 'sky', 'amber', 'purple', 'rose', 'indigo', 'teal', 'slate', 'orange'
+  bgClass: string;
+  textClass: string;
+  borderClass: string;
+}
+
+export interface CRMColumn {
+  id: string;
+  key: string;
+  label: string;
+  dotColor: string;
+  barColor: string;
+  badgeBg: string;
+  badgeText: string;
+}
 
 export interface CRMDeal {
   id: string;
@@ -91,6 +111,7 @@ export interface CRMDeal {
   value: number;
   salespersonName: string;
   productCategory: string;
+  tags?: string[];
   areaHectares?: number;
   startDate: string; // YYYY-MM-DD
   expectedCloseDate: string; // YYYY-MM-DD
@@ -109,6 +130,7 @@ export interface CRMIntegrationConfig {
   description: string;
   status: 'connected' | 'disconnected' | 'syncing';
   connectedAccount?: string;
+  accountEmail?: string;
   apiUrl?: string;
   apiKey?: string;
   lastSync?: string;

@@ -6,13 +6,8 @@ import {
   AlertTriangle,
   ArrowUpRight,
   UserCheck,
-  CheckCircle2,
   Sparkles,
-  Zap,
-  Activity,
   Calendar,
-  MessageSquare,
-  Filter,
   X,
   CalendarRange
 } from 'lucide-react';
@@ -26,63 +21,58 @@ interface OverviewProps {
 }
 
 export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: OverviewProps) {
-  const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null);
-  const [plansPeriod, setPlansPeriod] = useState<string>('30');
-  const [customDays, setCustomDays] = useState<number>(30);
-  const [customDaysInput, setCustomDaysInput] = useState<string>('30');
+  // Filtro de tempo para o Card 2: Usaram no período
+  const [usagePeriod, setUsagePeriod] = useState<string>('7');
+  const [usageCustomDays, setUsageCustomDays] = useState<number>(7);
+  const [isUsageDatePickerOpen, setIsUsageDatePickerOpen] = useState<boolean>(false);
+  const usageDatePickerRef = useRef<HTMLDivElement>(null);
+  const [usageStartDate, setUsageStartDate] = useState<string>('2026-08-28');
+  const [usageEndDate, setUsageEndDate] = useState<string>('2026-09-03');
+
+  // Filtro de tempo para o Card 3: Planos de argumentos gerados
+  const [plansPeriod, setPlansPeriod] = useState<string>('7');
+  const [customDays, setCustomDays] = useState<number>(7);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
   const datePickerRef = useRef<HTMLDivElement>(null);
-
-  // Intervalo de datas personalizado
-  const [startDate, setStartDate] = useState<string>('2026-08-04');
+  const [startDate, setStartDate] = useState<string>('2026-08-28');
   const [endDate, setEndDate] = useState<string>('2026-09-03');
-
-  // Estado para a janela de tempo do gráfico inferior (Ritmo Semanal)
-  const [chartPeriod, setChartPeriod] = useState<string>('7');
-  const [chartCustomDays, setChartCustomDays] = useState<number>(7);
-  const [isChartDatePickerOpen, setIsChartDatePickerOpen] = useState<boolean>(false);
-  const chartDatePickerRef = useRef<HTMLDivElement>(null);
-
-  // Intervalo de datas personalizado para o gráfico
-  const [chartStartDate, setChartStartDate] = useState<string>('2026-08-28');
-  const [chartEndDate, setChartEndDate] = useState<string>('2026-09-03');
 
   // Fechar popover ao clicar fora
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      if (usageDatePickerRef.current && !usageDatePickerRef.current.contains(event.target as Node)) {
+        setIsUsageDatePickerOpen(false);
+      }
       if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
         setIsDatePickerOpen(false);
       }
-      if (chartDatePickerRef.current && !chartDatePickerRef.current.contains(event.target as Node)) {
-        setIsChartDatePickerOpen(false);
-      }
     }
-    if (isDatePickerOpen || isChartDatePickerOpen) {
+    if (isUsageDatePickerOpen || isDatePickerOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [isDatePickerOpen, isChartDatePickerOpen]);
+  }, [isUsageDatePickerOpen, isDatePickerOpen]);
 
-  // Aplicar intervalo de datas selecionado para o gráfico
-  const applyChartDateRange = () => {
-    const start = new Date(chartStartDate);
-    const end = new Date(chartEndDate);
+  // Aplicar intervalo de datas selecionado para Uso
+  const applyUsageDateRange = () => {
+    const start = new Date(usageStartDate);
+    const end = new Date(usageEndDate);
     if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
       const diffMs = end.getTime() - start.getTime();
       const calculatedDays = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)));
-      setChartCustomDays(calculatedDays);
-      setChartPeriod('custom');
-      setIsChartDatePickerOpen(false);
+      setUsageCustomDays(calculatedDays);
+      setUsagePeriod('custom');
+      setIsUsageDatePickerOpen(false);
     }
   };
 
-  const applyChartCustomPreset = (days: number) => {
-    setChartCustomDays(days);
-    setChartPeriod('custom');
-    setIsChartDatePickerOpen(false);
+  const applyUsageCustomPreset = (days: number) => {
+    setUsageCustomDays(days);
+    setUsagePeriod('custom');
+    setIsUsageDatePickerOpen(false);
   };
 
-  // Aplicar intervalo de datas selecionado
+  // Aplicar intervalo de datas selecionado para Planos
   const applyDateRange = () => {
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -90,7 +80,6 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
       const diffMs = end.getTime() - start.getTime();
       const calculatedDays = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)));
       setCustomDays(calculatedDays);
-      setCustomDaysInput(String(calculatedDays));
       setPlansPeriod('custom');
       setIsDatePickerOpen(false);
     }
@@ -98,7 +87,6 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
 
   const applyCustomPreset = (days: number) => {
     setCustomDays(days);
-    setCustomDaysInput(String(days));
     setPlansPeriod('custom');
     setIsDatePickerOpen(false);
   };
@@ -106,14 +94,48 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
   const totalSalespeople = salespeople.length;
   const activeSalespeople = salespeople.filter((s) => s.status === 'Ativo');
   const activeCount = activeSalespeople.length;
-  
-  // Usaram nos últimos 7 dias: salespeople with messageCount > 0 and recent activity
-  const usedLast7Days = salespeople.filter(
-    (s) => s.messageCount > 0 && s.lastConversation !== 'Sem registros'
-  );
-  const usedLast7DaysCount = usedLast7Days.length;
 
-  // Dados dinâmicos por período selecionado
+  // Dados dinâmicos por período selecionado para USARAM NO PERÍODO
+  const getUsageData = () => {
+    let days = 7;
+    let label = '7 dias';
+
+    if (usagePeriod === '7') {
+      days = 7;
+      label = '7 dias';
+    } else if (usagePeriod === '15') {
+      days = 15;
+      label = '15 dias';
+    } else if (usagePeriod === '30') {
+      days = 30;
+      label = '30 dias';
+    } else {
+      days = usageCustomDays;
+      label = `${usageCustomDays} dias`;
+    }
+
+    const activeInPeriod = salespeople.filter((s) => {
+      if (s.status !== 'Ativo' && s.messageCount === 0) return false;
+      if (days <= 7) {
+        return s.messageCount > 0 && s.lastConversation !== 'Sem registros';
+      }
+      return s.messageCount > 0;
+    });
+
+    const count = activeInPeriod.length;
+    const pct = totalSalespeople > 0 ? Math.round((count / totalSalespeople) * 100) : 0;
+
+    return {
+      count,
+      label,
+      pct,
+      users: activeInPeriod,
+    };
+  };
+
+  const currentUsageData = getUsageData();
+
+  // Dados dinâmicos por período selecionado para PLANOS GERADOS
   const getPlansData = () => {
     if (plansPeriod === '7') return { count: 38, growth: '+14%', rate: '~5 gerados/dia', label: '7 dias' };
     if (plansPeriod === '15') return { count: 76, growth: '+18%', rate: '~5 gerados/dia', label: '15 dias' };
@@ -136,64 +158,10 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
   const needAttention = salespeople.filter(
     (s) => s.status === 'Inativo' || s.messageCount === 0
   );
-  const needAttentionCount = needAttention.length;
 
   // Taxas e cálculos
   const capacityRate = Math.round((activeCount / maxAccesses) * 100);
-  const adoptionRate = totalSalespeople > 0 ? Math.round((activeCount / totalSalespeople) * 100) : 0;
-  const inactiveRate = 100 - adoptionRate;
   const remainingSlots = Math.max(0, maxAccesses - activeCount);
-
-  // SVG circular chart math
-  const radius = 62;
-  const circumference = 2 * Math.PI * radius;
-  const activeStrokeDashoffset = circumference - (adoptionRate / 100) * circumference;
-
-  // Dados dinâmicos para visualização do ritmo de geração de planos de argumentos
-  const getChartData = () => {
-    if (chartPeriod === '15') {
-      return [
-        { day: 'D-14', count: 14, height: 35 },
-        { day: 'D-12', count: 20, height: 50 },
-        { day: 'D-10', count: 25, height: 62 },
-        { day: 'D-8', count: 19, height: 48 },
-        { day: 'D-6', count: 28, height: 70 },
-        { day: 'D-4', count: 32, height: 80 },
-        { day: 'D-2', count: 36, height: 90 },
-        { day: 'Hoje', count: 30, height: 75 },
-      ];
-    }
-    if (chartPeriod === '30') {
-      return [
-        { day: 'Sem 1', count: 32, height: 55 },
-        { day: 'Sem 2', count: 38, height: 65 },
-        { day: 'Sem 3', count: 46, height: 78 },
-        { day: 'Sem 4', count: 58, height: 98 },
-      ];
-    }
-    if (chartPeriod === 'custom') {
-      return [
-        { day: 'P1', count: Math.round(chartCustomDays * 1.2), height: 45 },
-        { day: 'P2', count: Math.round(chartCustomDays * 1.8), height: 65 },
-        { day: 'P3', count: Math.round(chartCustomDays * 2.4), height: 85 },
-        { day: 'P4', count: Math.round(chartCustomDays * 2.1), height: 75 },
-      ];
-    }
-    // Padrão: 7 dias (Seg a Dom)
-    return [
-      { day: 'Seg', count: 18, height: 45 },
-      { day: 'Ter', count: 26, height: 65 },
-      { day: 'Qua', count: 22, height: 55 },
-      { day: 'Qui', count: 34, height: 85 },
-      { day: 'Sex', count: 29, height: 72 },
-      { day: 'Sáb', count: 12, height: 30 },
-      { day: 'Dom', count: 7, height: 18 },
-    ];
-  };
-
-  const chartData = getChartData();
-  const maxChartCount = Math.max(...chartData.map((d) => d.count));
-  const chartPeriodLabel = chartPeriod === '7' ? '7 dias' : chartPeriod === '15' ? '15 dias' : chartPeriod === '30' ? '30 dias' : `${chartCustomDays} dias`;
 
   // Animações
   const containerVariants = {
@@ -220,7 +188,7 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6 sm:space-y-8 flex-1 flex flex-col justify-between pb-4"
+      className="space-y-6 sm:space-y-8 flex-1 flex flex-col justify-start pb-4"
     >
       {/* ================= DOBRA 1: INDICADORES PRINCIPAIS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -283,24 +251,152 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
           </div>
         </motion.div>
 
-        {/* CARD 2: USARAM NOS ÚLTIMOS 7 DIAS */}
+        {/* CARD 2: USARAM NO PERÍODO (COM O MESMO FILTRO DE TEMPO) */}
         <motion.div
           variants={itemVariants}
           className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-sm hover:shadow-xl hover:scale-105 relative hover:z-10 transition-all duration-300 flex flex-col justify-between group cursor-default"
         >
           <div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-600">Usaram nos últimos 7 dias</span>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                <Clock className="w-5 h-5" />
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 pr-1">
+                <span className="text-sm font-semibold text-slate-700 leading-snug block">
+                  Usaram nos últimos{' '}
+                  <span className="text-blue-600 font-bold whitespace-nowrap">{currentUsageData.label}</span>
+                </span>
               </div>
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
+                <Clock className="w-4 h-4" />
+              </div>
+            </div>
+
+            {/* Seletor / Filtro pré-configurado por tempo (7 dias / 15 dias / 30 dias) + Ícone de Calendário */}
+            <div className="relative mt-3" ref={usageDatePickerRef}>
+              <div className="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/60 text-xs">
+                {(['7', '15', '30'] as const).map((period) => (
+                  <button
+                    key={period}
+                    type="button"
+                    onClick={() => {
+                      setUsagePeriod(period);
+                      setIsUsageDatePickerOpen(false);
+                    }}
+                    className={`flex-1 py-1 px-1.5 rounded-lg text-[11px] font-bold transition-all text-center ${
+                      usagePeriod === period
+                        ? 'bg-white text-blue-700 shadow-xs scale-100 font-extrabold border border-blue-100/60'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    {period} dias
+                  </button>
+                ))}
+
+                {/* Botão com ícone de calendário para escolha de janela personalizada */}
+                <button
+                  type="button"
+                  onClick={() => setIsUsageDatePickerOpen(!isUsageDatePickerOpen)}
+                  title="Escolher janela de tempo personalizada no calendário"
+                  className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1 shrink-0 ${
+                    usagePeriod === 'custom' || isUsageDatePickerOpen
+                      ? 'bg-blue-600 text-white shadow-xs font-extrabold'
+                      : 'text-slate-600 hover:text-blue-700 hover:bg-white/80'
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  {usagePeriod === 'custom' && (
+                    <span className="text-[10px] hidden sm:inline">{usageCustomDays}d</span>
+                  )}
+                </button>
+              </div>
+
+              {/* Popover elegante para escolha da janela de tempo */}
+              {isUsageDatePickerOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 z-30 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 text-xs">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
+                    <div className="flex items-center space-x-1.5 text-slate-800 font-bold">
+                      <CalendarRange className="w-4 h-4 text-blue-600" />
+                      <span>Janela de tempo personalizada</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsUsageDatePickerOpen(false)}
+                      className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Atalhos rápidos */}
+                  <div className="mb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+                      Janelas pré-definidas
+                    </span>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {[45, 60, 90].map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => applyUsageCustomPreset(d)}
+                          className={`py-1 px-2 rounded-lg text-xs font-bold border transition-all ${
+                            usagePeriod === 'custom' && usageCustomDays === d
+                              ? 'bg-blue-50 border-blue-300 text-blue-700'
+                              : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          {d} dias
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Selecionar intervalo de datas */}
+                  <div className="space-y-2 border-t border-slate-100 pt-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                      Ou selecione o período
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">De</label>
+                        <input
+                          type="date"
+                          value={usageStartDate}
+                          onChange={(e) => setUsageStartDate(e.target.value)}
+                          className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-700 font-medium focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Até</label>
+                        <input
+                          type="date"
+                          value={usageEndDate}
+                          onChange={(e) => setUsageEndDate(e.target.value)}
+                          className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-700 font-medium focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={applyUsageDateRange}
+                      className="w-full mt-2 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-all"
+                    >
+                      Aplicar período
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-4">
               <div className="flex items-baseline space-x-2">
-                <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-                  {usedLast7DaysCount}
-                </span>
+                <motion.span
+                  key={usagePeriod}
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight"
+                >
+                  {currentUsageData.count}
+                </motion.span>
                 <span className="text-xs text-slate-500 font-medium">vendedores</span>
               </div>
             </div>
@@ -309,13 +405,13 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
           <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
             <div className="flex items-center text-xs font-semibold text-blue-600">
               <span className="px-2 py-0.5 rounded-md bg-blue-50 border border-blue-100 mr-1.5 font-bold">
-                {totalSalespeople > 0 ? Math.round((usedLast7DaysCount / totalSalespeople) * 100) : 0}%
+                {currentUsageData.pct}%
               </span>
               <span>equipe ativa recente</span>
             </div>
             {/* Avatares dos membros que interagiram recentemente */}
             <div className="flex -space-x-1.5 overflow-hidden">
-              {usedLast7Days.slice(0, 3).map((u) => (
+              {currentUsageData.users.slice(0, 3).map((u) => (
                 <div
                   key={u.id}
                   title={u.name}
@@ -490,115 +586,12 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
         </motion.div>
       </div>
 
-      {/* ================= DOBRA 2: DIAGNÓSTICO E AÇÃO (EXPANDIDOS) ================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        {/* Card 1: Adoção da equipe (Gráfico circular interativo com dados complementares) */}
+      {/* ================= DOBRA 2: DIAGNÓSTICO E ATENÇÃO ================= */}
+      <div className="grid grid-cols-1 gap-6">
+        {/* Card: Precisam de atenção (Com destaque claro, alertas e lista de vendedores) */}
         <motion.div
           variants={itemVariants}
-          className="lg:col-span-6 bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:scale-105 hover:shadow-xl relative hover:z-10 transition-all duration-300 p-6 sm:p-7 flex flex-col justify-between cursor-default"
-        >
-          <div>
-            <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
-              <div>
-                <h3 className="font-bold text-slate-900 text-lg">Adoção da equipe</h3>
-                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                  Distribuição percentual de engajamento dos vendedores
-                </p>
-              </div>
-              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-[#00a83e] border border-emerald-100/60">
-                Visão 360°
-              </span>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-around py-4 gap-6 sm:gap-8">
-              {/* Circular Chart SVG Animado */}
-              <div className="relative w-44 h-44 sm:w-48 sm:h-48 flex items-center justify-center shrink-0">
-                <svg className="w-full h-full transform -rotate-90 drop-shadow-xs" viewBox="0 0 160 160">
-                  {/* Base Track circle */}
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r={radius}
-                    stroke="#f1f5f9"
-                    strokeWidth="16"
-                    fill="transparent"
-                  />
-                  {/* Inactive segment background */}
-                  {inactiveRate > 0 && (
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r={radius}
-                      stroke="#f43f5e"
-                      strokeWidth="16"
-                      fill="transparent"
-                      strokeDasharray={circumference}
-                      strokeDashoffset={0}
-                      className="opacity-90"
-                    />
-                  )}
-                  {/* Active segment with spring motion */}
-                  <motion.circle
-                    cx="80"
-                    cy="80"
-                    r={radius}
-                    stroke="#00a83e"
-                    strokeWidth="16"
-                    strokeLinecap="round"
-                    fill="transparent"
-                    strokeDasharray={circumference}
-                    initial={{ strokeDashoffset: circumference }}
-                    animate={{ strokeDashoffset: activeStrokeDashoffset }}
-                    transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                  />
-                </svg>
-
-                {/* Center text */}
-                <div className="absolute flex flex-col items-center justify-center text-center">
-                  <motion.span
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.3, duration: 0.5 }}
-                    className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight"
-                  >
-                    {adoptionRate}%
-                  </motion.span>
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
-                    Adoção
-                  </span>
-                </div>
-              </div>
-
-              {/* Legend & Breakdown */}
-              <div className="space-y-3.5 w-full sm:w-60">
-                <div className="flex items-center justify-between space-x-4 bg-slate-50/80 p-3 rounded-xl border border-slate-100">
-                  <div className="flex items-center space-x-2.5">
-                    <span className="w-3.5 h-3.5 rounded-full bg-[#00a83e] shadow-xs shadow-emerald-500/40"></span>
-                    <span className="text-xs font-semibold text-slate-700">Ativos no sistema</span>
-                  </div>
-                  <span className="text-xs font-bold text-slate-900 bg-white px-2 py-0.5 rounded-md border border-slate-200">
-                    {activeCount} ({adoptionRate}%)
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between space-x-4 bg-slate-50/80 p-3 rounded-xl border border-slate-100">
-                  <div className="flex items-center space-x-2.5">
-                    <span className="w-3.5 h-3.5 rounded-full bg-rose-500 shadow-xs shadow-rose-500/40"></span>
-                    <span className="text-xs font-semibold text-slate-700">Inativos / Sem uso</span>
-                  </div>
-                  <span className="text-xs font-bold text-slate-900 bg-white px-2.5 py-0.5 rounded-md border border-slate-200">
-                    {needAttentionCount} ({inactiveRate}%)
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Card 2: Precisam de ação (Com ícone de perigo vermelho, ações diretas e barra de status) */}
-        <motion.div
-          variants={itemVariants}
-          className="lg:col-span-6 bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:scale-105 hover:shadow-xl relative hover:z-10 transition-all duration-300 p-6 sm:p-7 flex flex-col justify-between cursor-default"
+          className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:scale-[1.01] hover:shadow-xl relative hover:z-10 transition-all duration-300 p-6 sm:p-7 flex flex-col justify-between cursor-default"
         >
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-slate-100 pb-4">
@@ -607,9 +600,10 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
                   <AlertTriangle className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <div className="flex items-center space-x-2">
-                    <h3 className="font-bold text-slate-900 text-lg">Precisam de atenção</h3>
-                  </div>
+                  <h3 className="font-bold text-slate-900 text-lg">Precisam de atenção</h3>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                    Vendedores inativos ou sem interações registradas
+                  </p>
                 </div>
               </div>
 
@@ -661,198 +655,7 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
           </div>
         </motion.div>
       </div>
-
-      {/* ================= SEÇÃO COMPLEMENTAR: RITMO SEMANAL DE PROPOSTAS ================= */}
-      {/* Esta seção preenche o espaço inferior com dados comerciais refinados e visual executivo */}
-      <motion.div
-        variants={itemVariants}
-        className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:scale-105 hover:shadow-xl relative hover:z-10 transition-all duration-300 p-6 sm:p-7 flex flex-col justify-between cursor-default"
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-slate-100 pb-4">
-          <div>
-            <div className="flex items-center space-x-2">
-              <Activity className="w-4 h-4 text-[#00a83e]" />
-              <h3 className="font-bold text-slate-900 text-base sm:text-lg">
-                Ritmo de geração de planos
-              </h3>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-              Volume diário de propostas emitidas via inteligência comercial Ceruti
-            </p>
-          </div>
-
-          {/* Seletor / Filtro pré-configurado por tempo (7 dias / 15 dias / 30 dias) + Ícone de Calendário */}
-          <div className="relative" ref={chartDatePickerRef}>
-            <div className="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/60 text-xs">
-              {(['7', '15', '30'] as const).map((period) => (
-                <button
-                  key={period}
-                  type="button"
-                  onClick={() => {
-                    setChartPeriod(period);
-                    setIsChartDatePickerOpen(false);
-                  }}
-                  className={`py-1 px-2 sm:px-2.5 rounded-lg text-[11px] font-bold transition-all text-center ${
-                    chartPeriod === period
-                      ? 'bg-white text-[#00a83e] shadow-xs scale-100 font-extrabold border border-emerald-100/60'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  {period} dias
-                </button>
-              ))}
-
-              {/* Botão com ícone de calendário para escolha de janela personalizada */}
-              <button
-                type="button"
-                onClick={() => setIsChartDatePickerOpen(!isChartDatePickerOpen)}
-                title="Escolher janela de tempo personalizada no calendário"
-                className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1 shrink-0 ${
-                  chartPeriod === 'custom' || isChartDatePickerOpen
-                    ? 'bg-[#00a83e] text-white shadow-xs font-extrabold'
-                    : 'text-slate-600 hover:text-[#00a83e] hover:bg-white/80'
-                }`}
-              >
-                <Calendar className="w-3.5 h-3.5" />
-                {chartPeriod === 'custom' && (
-                  <span className="text-[10px] hidden sm:inline">{chartCustomDays}d</span>
-                )}
-              </button>
-            </div>
-
-            {/* Popover elegante para escolha da janela de tempo */}
-            {isChartDatePickerOpen && (
-              <div className="absolute top-full right-0 mt-2 z-30 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 text-xs w-72">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
-                  <div className="flex items-center space-x-1.5 text-slate-800 font-bold">
-                    <CalendarRange className="w-4 h-4 text-[#00a83e]" />
-                    <span>Janela de tempo personalizada</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsChartDatePickerOpen(false)}
-                    className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 transition-colors"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {/* Atalhos rápidos */}
-                <div className="mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
-                    Janelas pré-definidas
-                  </span>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {[45, 60, 90].map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => applyChartCustomPreset(d)}
-                        className={`py-1 px-2 rounded-lg text-xs font-bold border transition-all ${
-                          chartPeriod === 'custom' && chartCustomDays === d
-                            ? 'bg-emerald-50 border-emerald-300 text-[#00a83e]'
-                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        {d} dias
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Selecionar intervalo de datas */}
-                <div className="space-y-2 border-t border-slate-100 pt-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                    Ou selecione o período
-                  </span>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">De</label>
-                      <input
-                        type="date"
-                        value={chartStartDate}
-                        onChange={(e) => setChartStartDate(e.target.value)}
-                        className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-700 font-medium focus:ring-1 focus:ring-emerald-500 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Até</label>
-                      <input
-                        type="date"
-                        value={chartEndDate}
-                        onChange={(e) => setChartEndDate(e.target.value)}
-                        className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-700 font-medium focus:ring-1 focus:ring-emerald-500 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={applyChartDateRange}
-                    className="w-full mt-2 py-1.5 rounded-lg bg-[#00a83e] hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all"
-                  >
-                    Aplicar período
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Gráfico de Barras Minimalista com Micro-interações */}
-        <div className="flex items-end h-36 pt-4 pb-2 justify-around gap-2 sm:gap-4">
-          {chartData.map((item, index) => {
-            const isHighest = item.count === maxChartCount;
-            const isHovered = hoveredBarIndex === index;
-
-            return (
-              <div
-                key={item.day}
-                onMouseEnter={() => setHoveredBarIndex(index)}
-                onMouseLeave={() => setHoveredBarIndex(null)}
-                className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer max-w-[56px]"
-              >
-                {/* Tooltip com contagem */}
-                <div
-                  className={`mb-2 px-2 py-0.5 rounded text-[11px] font-bold transition-all duration-200 ${
-                    isHovered || isHighest
-                      ? 'bg-slate-900 text-white shadow-md -translate-y-0.5'
-                      : 'text-slate-400 opacity-60'
-                  }`}
-                >
-                  {item.count}
-                </div>
-
-                {/* Coluna da barra animada */}
-                <div className="w-full max-w-[42px] bg-slate-100 rounded-lg h-24 flex items-end p-1 overflow-hidden">
-                  <motion.div
-                    key={`${chartPeriod}-${item.day}`}
-                    initial={{ height: 0 }}
-                    animate={{ height: `${item.height}%` }}
-                    transition={{ duration: 0.8, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
-                    className={`w-full rounded-md transition-colors duration-300 ${
-                      isHighest
-                        ? 'bg-gradient-to-t from-[#00a83e] to-emerald-400 shadow-xs'
-                        : isHovered
-                        ? 'bg-emerald-600'
-                        : 'bg-emerald-500/80 group-hover:bg-emerald-600'
-                    }`}
-                  />
-                </div>
-
-                {/* Dia / Período */}
-                <span
-                  className={`text-xs mt-2 font-semibold transition-colors ${
-                    isHovered || isHighest ? 'text-[#00a83e] font-bold' : 'text-slate-500'
-                  }`}
-                >
-                  {item.day}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </motion.div>
     </motion.div>
   );
 }
+

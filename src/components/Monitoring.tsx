@@ -52,12 +52,59 @@ export function Monitoring({ salespeople }: MonitoringProps) {
     );
   }, [enrichedSalespeople, selectedSalespersonId]);
 
-  // Filtro de período para os gráficos (7 dias, 15 dias, 30 dias, personalizado)
+  // Filtro de período para os gráficos de atividade (7 dias, 15 dias, 30 dias, personalizado)
   const [periodFilter, setPeriodFilter] = useState<'7' | '15' | '30' | 'custom'>('7');
   const [customDays, setCustomDays] = useState<number>(14);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<string>('2026-08-20');
   const [endDate, setEndDate] = useState<string>('2026-09-04');
+
+  // Filtro de período para o card de Quantidade de Planos
+  const [plansPeriodFilter, setPlansPeriodFilter] = useState<'7' | '15' | '30' | 'custom'>('30');
+  const [plansCustomDays, setPlansCustomDays] = useState<number>(14);
+  const [isPlansDatePickerOpen, setIsPlansDatePickerOpen] = useState<boolean>(false);
+  const [plansStartDate, setPlansStartDate] = useState<string>('2026-08-20');
+  const [plansEndDate, setPlansEndDate] = useState<string>('2026-09-04');
+
+  // Aplicar intervalo customizado para Planos
+  const handleApplyPlansCustomDates = () => {
+    if (plansStartDate && plansEndDate) {
+      const start = new Date(plansStartDate);
+      const end = new Date(plansEndDate);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      setPlansCustomDays(Math.min(30, Math.max(1, diffDays)));
+      setPlansPeriodFilter('custom');
+      setIsPlansDatePickerOpen(false);
+    }
+  };
+
+  // Cálculo dinâmico de planos gerados conforme o período
+  const currentPlansData = useMemo(() => {
+    const monthlyBase = currentSalesperson.plansGeneratedMonth || 82;
+    if (plansPeriodFilter === '7') {
+      return {
+        count: Math.round((monthlyBase / 30) * 7) || 19,
+        label: 'nos últimos 7 dias',
+      };
+    }
+    if (plansPeriodFilter === '15') {
+      return {
+        count: Math.round((monthlyBase / 30) * 15) || 41,
+        label: 'nos últimos 15 dias',
+      };
+    }
+    if (plansPeriodFilter === '30') {
+      return {
+        count: monthlyBase,
+        label: 'neste mês (30 dias)',
+      };
+    }
+    return {
+      count: Math.max(1, Math.round((monthlyBase / 30) * plansCustomDays)),
+      label: `em ${plansCustomDays} dias`,
+    };
+  }, [currentSalesperson.plansGeneratedMonth, plansPeriodFilter, plansCustomDays]);
 
   // Estado para o Tablet Modal
   const [isTabletModalOpen, setIsTabletModalOpen] = useState<boolean>(false);
@@ -223,35 +270,121 @@ export function Monitoring({ salespeople }: MonitoringProps) {
       {/* ================= DOBRA 1: KPI DE QUANTIDADE DE PLANOS & FILTRO TEMPORAL ================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* KPI 1: QUANTIDADE DE PLANOS DE ARGUMENTOS GERADOS (DESTAQUE HEROICO) */}
+        {/* KPI 1: QUANTIDADE DE PLANOS DE ARGUMENTOS GERADOS (COM FILTRO PADRÃO) */}
         <motion.div
           variants={itemVariants}
           className="lg:col-span-5 bg-gradient-to-br from-emerald-500/[0.08] via-white to-emerald-50/40 rounded-2xl p-6 sm:p-7 border-2 border-emerald-500/40 shadow-md shadow-emerald-500/5 hover:border-emerald-500 hover:scale-105 hover:shadow-xl relative hover:z-10 transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-default"
         >
           <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-400/15 rounded-full blur-2xl pointer-events-none -mr-10 -mt-10" />
 
-          {/* Cabeçalho Redimensionado */}
-          <div className="flex items-start justify-between gap-4">
-            <h3 className="text-lg sm:text-xl font-extrabold text-slate-800 leading-snug max-w-[260px]">
-              Quantidade de Planos de Argumentos Gerados
-            </h3>
-            <div className="w-12 h-12 rounded-2xl bg-[#00a83e] text-white flex items-center justify-center shadow-md shadow-emerald-500/30 shrink-0">
-              <Target className="w-6 h-6" />
+          {/* Cabeçalho com Título, Ícone e Filtro de Período Padrão */}
+          <div>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <h3 className="text-base sm:text-lg font-extrabold text-slate-800 leading-snug">
+                Quantidade de Planos de Argumentos Gerados
+              </h3>
+              <div className="w-11 h-11 rounded-xl bg-[#00a83e] text-white flex items-center justify-center shadow-md shadow-emerald-500/30 shrink-0">
+                <Target className="w-5 h-5" />
+              </div>
+            </div>
+
+            {/* Filtro Padrão de Período */}
+            <div className="flex items-center space-x-1.5 bg-slate-100/90 backdrop-blur-xs p-1 rounded-xl border border-slate-200/80 text-xs w-fit">
+              {(['7', '15', '30'] as const).map((period) => (
+                <button
+                  key={period}
+                  type="button"
+                  onClick={() => {
+                    setPlansPeriodFilter(period);
+                    setIsPlansDatePickerOpen(false);
+                  }}
+                  className={`py-1 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    plansPeriodFilter === period
+                      ? 'bg-white text-[#00a83e] shadow-xs font-extrabold border border-emerald-100'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {period} dias
+                </button>
+              ))}
+
+              {/* Botão de Data Personalizada com Popover */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsPlansDatePickerOpen(!isPlansDatePickerOpen)}
+                  className={`py-1 px-2 rounded-lg text-xs font-bold transition-all flex items-center space-x-1 cursor-pointer ${
+                    plansPeriodFilter === 'custom'
+                      ? 'bg-white text-[#00a83e] shadow-xs font-extrabold border border-emerald-100'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{plansPeriodFilter === 'custom' ? `${plansCustomDays}d` : 'Personalizado'}</span>
+                </button>
+
+                {/* Popover de Data Personalizada */}
+                {isPlansDatePickerOpen && (
+                  <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-40 text-xs">
+                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+                      <span className="font-bold text-slate-900 flex items-center space-x-1.5">
+                        <CalendarRange className="w-3.5 h-3.5 text-[#00a83e]" />
+                        <span>Janela Personalizada</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsPlansDatePickerOpen(false)}
+                        className="text-slate-400 hover:text-slate-600 p-1"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">De:</label>
+                        <input
+                          type="date"
+                          value={plansStartDate}
+                          onChange={(e) => setPlansStartDate(e.target.value)}
+                          className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Até:</label>
+                        <input
+                          type="date"
+                          value={plansEndDate}
+                          onChange={(e) => setPlansEndDate(e.target.value)}
+                          className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleApplyPlansCustomDates}
+                        className="w-full py-2 rounded-xl bg-[#00a83e] hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
+                      >
+                        Aplicar Intervalo
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Área Central Redimensionada para Preenchimento Integral */}
-          <div className="my-auto py-6 sm:py-8 flex flex-col justify-center">
-            <span className="text-7xl sm:text-8xl lg:text-9xl font-black tracking-tight text-slate-900 leading-none">
-              {currentSalesperson.plansGeneratedMonth || 82}
+          {/* Área Central com Número e Rótulo Dinâmico */}
+          <div className="my-auto py-5 sm:py-6 flex flex-col justify-center">
+            <span className="text-6xl sm:text-7xl lg:text-8xl font-black tracking-tight text-slate-900 leading-none">
+              {currentPlansData.count}
             </span>
-            <span className="text-base sm:text-lg lg:text-xl font-bold text-slate-500 mt-3 sm:mt-4 leading-normal">
-              planos gerados neste mês
+            <span className="text-sm sm:text-base font-bold text-slate-500 mt-2 sm:mt-3 leading-normal">
+              planos gerados {currentPlansData.label}
             </span>
           </div>
         </motion.div>
 
-        {/* CONTROLES DE FILTRO DE DATA E CARDS COMPLEMENTARES */}
+        {/* CONTROLES DE FILTRO DE DATA E CARDS COMPLEMENTARES DIDÁTICOS */}
         <motion.div
           variants={itemVariants}
           className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:scale-105 hover:shadow-xl relative hover:z-10 transition-all duration-300 p-6 flex flex-col justify-between cursor-default"
@@ -259,9 +392,11 @@ export function Monitoring({ salespeople }: MonitoringProps) {
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
               <div>
-                <h4 className="font-bold text-slate-900 text-base">Filtro de Período Temporal</h4>
+                <h4 className="font-bold text-slate-900 text-base">
+                  Atividade no Período
+                </h4>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Ajuste a janela de análise para calibrar os gráficos de uso e frequência
+                  Escolha quantos dias deseja ver para entender a rotina de uso do vendedor
                 </p>
               </div>
 
@@ -350,42 +485,45 @@ export function Monitoring({ salespeople }: MonitoringProps) {
               </div>
             </div>
 
-            {/* Diagnóstico Rápido da Utilização do Vendedor no Período */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center space-x-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-100 text-[#00a83e] flex items-center justify-center shrink-0">
-                  <Activity className="w-4 h-4" />
+            {/* Diagnóstico Rápido e Didático da Utilização do Vendedor no Período */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-4">
+              {/* Card 1: Dias que trabalhou */}
+              <div className="p-3.5 rounded-xl bg-blue-50/40 border border-blue-100 flex flex-col justify-between">
+                <div className="flex items-center space-x-2.5 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-700">Dias com atividade</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Frequência Total</span>
-                  <span className="text-lg font-black text-slate-900">{periodMetrics.totalInteractions} vezes</span>
+                  <span className="text-2xl font-black text-slate-900 block">{periodMetrics.daysActive} de {timelineData.length} dias</span>
+                  <span className="text-[11px] text-blue-700 font-medium mt-0.5 block">
+                    {periodMetrics.daysActive === timelineData.length
+                      ? 'Entrou todos os dias'
+                      : `${Math.round((periodMetrics.daysActive / timelineData.length) * 100)}% dos dias do período`}
+                  </span>
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center space-x-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-                  <Calendar className="w-4 h-4" />
+              {/* Card 2: Média por dia */}
+              <div className="p-3.5 rounded-xl bg-amber-50/40 border border-amber-100 flex flex-col justify-between">
+                <div className="flex items-center space-x-2.5 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-700">Média por dia</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Dias Ativos</span>
-                  <span className="text-lg font-black text-slate-900">{periodMetrics.daysActive} de {timelineData.length} dias</span>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center space-x-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-                  <Zap className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Intensidade Média</span>
-                  <span className="text-lg font-black text-slate-900">{periodMetrics.avgInteractions}/dia</span>
+                  <span className="text-2xl font-black text-slate-900 block">{periodMetrics.avgInteractions} / dia</span>
+                  <span className="text-[11px] text-slate-500 mt-0.5 block">Média de conversas diárias</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end text-xs text-slate-500">
-            <span className="font-semibold text-slate-700">Período: Últimos {timelineData.length} dias</span>
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span className="text-slate-400 font-medium">Resumo do vendedor</span>
+            <span className="font-bold text-slate-700">Mostrando os últimos {timelineData.length} dias de uso</span>
           </div>
         </motion.div>
       </div>
@@ -400,16 +538,11 @@ export function Monitoring({ salespeople }: MonitoringProps) {
         >
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-slate-100 pb-4">
-              <div>
-                <div className="flex items-center space-x-2">
-                  <ShieldAlert className="w-4 h-4 text-amber-500" />
-                  <h3 className="font-bold text-slate-900 text-base">
-                    Mapa de Objeções Trazidas pelo Vendedor
-                  </h3>
-                </div>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Categorização das resistências de clientes que <strong className="text-slate-700">{currentSalesperson.name}</strong> submeteu à IA
-                </p>
+              <div className="flex items-center space-x-2">
+                <ShieldAlert className="w-4 h-4 text-amber-500" />
+                <h3 className="font-bold text-slate-900 text-base">
+                  Mapa de Objeções Trazidas pelo Vendedor
+                </h3>
               </div>
 
               <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shrink-0">

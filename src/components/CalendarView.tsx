@@ -17,9 +17,12 @@ import {
   Smartphone,
   Check,
   Copy,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Salesperson } from "../types";
+import { SellerScheduleInlineView } from "./SellerScheduleInlineView";
 
 interface CalendarViewProps {
   salespeople: Salesperson[];
@@ -40,7 +43,7 @@ export function CalendarView({
   const [calendarEmail, setCalendarEmail] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [syncingPersonId, setSyncingPersonId] = useState<string | null>(null);
-  const [copiedLinkPersonId, setCopiedLinkPersonId] = useState<string | null>(null);
+  const [expandedSellerId, setExpandedSellerId] = useState<string | null>(null);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
 
   const showToast = (message: string) => {
@@ -97,7 +100,10 @@ export function CalendarView({
     onUpdateSalespersonCalendar(person.id, {
       status: "disconnected",
     });
-    showToast(`Integração de calendário removida para ${person.name}.`);
+    if (expandedSellerId === person.id) {
+      setExpandedSellerId(null);
+    }
+    showToast(`Integração de calendário desconectada para ${person.name}.`);
   };
 
   const handleSyncNow = (person: Salesperson) => {
@@ -106,21 +112,33 @@ export function CalendarView({
       onUpdateSalespersonCalendar(person.id, {
         ...person.calendarIntegration,
         status: "connected",
+        provider: person.calendarIntegration?.provider || "google",
+        email: person.calendarIntegration?.email || `${person.name.toLowerCase().replace(/\s+/g, ".")}@ceruti.com.br`,
+        connectedAt: person.calendarIntegration?.connectedAt || "Hoje, " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         lastSync: "Agora mesmo",
       });
       setSyncingPersonId(null);
       showToast(`Agenda de ${person.name} sincronizada com sucesso!`);
-    }, 1000);
+    }, 900);
   };
 
-  const handleCopyInviteLink = (person: Salesperson) => {
-    const inviteUrl = `${window.location.origin}/integrar-calendario?user=${encodeURIComponent(person.id)}`;
-    navigator.clipboard?.writeText(inviteUrl);
-    setCopiedLinkPersonId(person.id);
-    showToast(`Link de integração copiado para enviar ao vendedor ${person.name}!`);
-    setTimeout(() => {
-      setCopiedLinkPersonId(null);
-    }, 3000);
+  const handleToggleSchedule = (person: Salesperson) => {
+    if (expandedSellerId === person.id) {
+      setExpandedSellerId(null);
+    } else {
+      // Se ainda não estiver conectado, conecta automaticamente para exibir a agenda completa ao gestor
+      if (person.calendarIntegration?.status !== "connected") {
+        onUpdateSalespersonCalendar(person.id, {
+          status: "connected",
+          provider: "google",
+          email: `${person.name.toLowerCase().replace(/\s+/g, ".")}@ceruti.com.br`,
+          connectedAt: "Hoje, " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          lastSync: "Agora mesmo",
+        });
+        showToast(`Agenda de ${person.name} sincronizada e aberta!`);
+      }
+      setExpandedSellerId(person.id);
+    }
   };
 
   return (
@@ -306,152 +324,155 @@ export function CalendarView({
             <p className="text-xs text-slate-400 mt-1">Tente ajustar os termos da busca ou os filtros acima.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {filteredList.map((person) => {
               const isConnected = person.calendarIntegration?.status === "connected";
               const isSyncing = syncingPersonId === person.id;
-              const hasCopied = copiedLinkPersonId === person.id;
+              const isExpanded = expandedSellerId === person.id;
 
               return (
                 <div
                   key={person.id}
-                  className={`p-4 sm:p-5 rounded-2xl border transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                    isConnected
+                  className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                    isExpanded
+                      ? "bg-white border-emerald-500/60 shadow-lg ring-1 ring-emerald-500/20"
+                      : isConnected
                       ? "bg-emerald-500/[0.03] border-emerald-200/80 hover:border-emerald-300 shadow-xs"
                       : "bg-white border-slate-200/90 hover:border-slate-300 shadow-xs"
                   }`}
                 >
-                  {/* Left: User Info & Avatar */}
-                  <div className="flex items-center space-x-3.5 min-w-[240px]">
-                    <div className="relative">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-slate-200 to-slate-100 border-2 border-white shadow-xs flex items-center justify-center font-bold text-slate-700 text-sm">
-                        {person.name
-                          .split(" ")
-                          .slice(0, 2)
-                          .map((n) => n[0])
-                          .join("")
-                          .toUpperCase()}
-                      </div>
-                      <span
-                        className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${
-                          isConnected ? "bg-[#00a83e]" : "bg-amber-400"
-                        }`}
-                        title={isConnected ? "Calendário Ativo" : "Pendente de Conexão"}
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <h4 className="text-base font-bold text-slate-900">{person.name}</h4>
+                  <div className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    {/* Left: User Info & Avatar */}
+                    <div className="flex items-center space-x-3.5 min-w-[240px]">
+                      <div className="relative">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-slate-200 to-slate-100 border-2 border-white shadow-xs flex items-center justify-center font-bold text-slate-700 text-sm">
+                          {person.name
+                            .split(" ")
+                            .slice(0, 2)
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()}
+                        </div>
                         <span
-                          className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
-                            person.status === "Ativo"
-                              ? "bg-emerald-100/70 text-emerald-800"
-                              : "bg-slate-100 text-slate-600"
+                          className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${
+                            isConnected ? "bg-[#00a83e]" : "bg-amber-400"
                           }`}
-                        >
-                          {person.status}
-                        </span>
+                          title={isConnected ? "Calendário Ativo" : "Pendente de Conexão"}
+                        />
                       </div>
-                      <div className="flex items-center space-x-2 text-xs text-slate-500 mt-0.5">
-                        <Smartphone className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{person.whatsapp}</span>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Middle: Integration Details or Status Callout */}
-                  <div className="flex-1 md:px-6">
-                    {isConnected ? (
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs">
+                      <div>
                         <div className="flex items-center space-x-2">
-                          <span className="w-2 h-2 rounded-full bg-[#00a83e] animate-pulse" />
-                          <span className="font-extrabold text-[#00a83e] flex items-center space-x-1">
-                            <CheckCircle2 className="w-3.5 h-3.5 mr-0.5" />
-                            <span>Conectado ao {person.calendarIntegration?.provider === "outlook" ? "Outlook" : "Google Agenda"}</span>
+                          <h4 className="text-base font-bold text-slate-900">{person.name}</h4>
+                          <span
+                            className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                              person.status === "Ativo"
+                                ? "bg-emerald-100/70 text-emerald-800"
+                                : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            {person.status}
                           </span>
                         </div>
-
-                        {person.calendarIntegration?.email && (
-                          <div className="flex items-center space-x-1.5 text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200/80">
-                            <Mail className="w-3 h-3 text-slate-400" />
-                            <span className="font-medium text-slate-700 truncate max-w-[200px]">
-                              {person.calendarIntegration.email}
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="flex items-center space-x-1 text-slate-400">
-                          <Clock className="w-3 h-3" />
-                          <span>Último sync: {person.calendarIntegration?.lastSync || "Hoje"}</span>
+                        <div className="flex items-center space-x-2 text-xs text-slate-500 mt-0.5">
+                          <Smartphone className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{person.whatsapp}</span>
                         </div>
                       </div>
-                    ) : (
-                      <div className="flex items-center space-x-2 text-xs text-amber-700 bg-amber-50/70 border border-amber-200/60 px-3 py-1.5 rounded-xl w-fit">
-                        <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                        <span>Calendário não vinculado. Reuniões agendadas não constarão na agenda pessoal deste vendedor.</span>
-                      </div>
-                    )}
-                  </div>
+                    </div>
 
-                  {/* Right: Actions */}
-                  <div className="flex items-center space-x-2 shrink-0 self-end md:self-center">
-                    {isConnected ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleSyncNow(person)}
-                          disabled={isSyncing}
-                          className="px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
-                          title="Sincronizar compromissos agora"
-                        >
-                          <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isSyncing ? "animate-spin text-[#00a83e]" : ""}`} />
-                          <span>{isSyncing ? "Sincronizando..." : "Sincronizar"}</span>
-                        </button>
+                    {/* Middle: Integration Details or Status Callout */}
+                    <div className="flex-1 md:px-6">
+                      {isConnected ? (
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs">
+                          <div className="flex items-center space-x-2">
+                            <span className="w-2 h-2 rounded-full bg-[#00a83e] animate-pulse" />
+                            <span className="font-extrabold text-[#00a83e] flex items-center space-x-1">
+                              <CheckCircle2 className="w-3.5 h-3.5 mr-0.5" />
+                              <span>Conectado ao {person.calendarIntegration?.provider === "outlook" ? "Outlook" : "Google Agenda"}</span>
+                            </span>
+                          </div>
 
-                        <button
-                          type="button"
-                          onClick={() => handleDisconnect(person)}
-                          className="px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:text-red-700 bg-red-50/60 hover:bg-red-50 border border-red-200/60 transition-all flex items-center space-x-1.5 cursor-pointer"
-                          title="Desconectar calendário"
-                        >
-                          <Unlink className="w-3.5 h-3.5" />
-                          <span>Desconectar</span>
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyInviteLink(person)}
-                          className="px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 transition-all flex items-center space-x-1.5 cursor-pointer"
-                          title="Copiar link para enviar ao vendedor"
-                        >
-                          {hasCopied ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 text-[#00a83e]" />
-                              <span className="text-[#00a83e]">Copiado!</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3.5 h-3.5 text-slate-400" />
-                              <span>Link de convite</span>
-                            </>
+                          {person.calendarIntegration?.email && (
+                            <div className="flex items-center space-x-1.5 text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200/80">
+                              <Mail className="w-3 h-3 text-slate-400" />
+                              <span className="font-medium text-slate-700 truncate max-w-[200px]">
+                                {person.calendarIntegration.email}
+                              </span>
+                            </div>
                           )}
-                        </button>
 
-                        {/* O BOTÃO SOLICITADO PELO USUÁRIO: Joao Silva [Integrar ao calendário] */}
-                        <button
-                          type="button"
-                          onClick={() => handleOpenModal(person)}
-                          className="px-4 py-2 bg-[#00a83e] hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 flex items-center space-x-1.5 cursor-pointer"
-                        >
-                          <CalendarIcon className="w-3.5 h-3.5" />
-                          <span>Integrar ao calendário</span>
-                        </button>
-                      </>
-                    )}
+                          <div className="flex items-center space-x-1 text-slate-400">
+                            <Clock className="w-3 h-3" />
+                            <span>Último sync: {person.calendarIntegration?.lastSync || "Hoje"}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2 text-xs text-amber-700 bg-amber-50/70 border border-amber-200/60 px-3 py-1.5 rounded-xl w-fit">
+                          <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span>Calendário não vinculado. Clique em <strong>Sincronizar</strong> ou <strong>Ver agenda</strong> para integrar.</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right: Exactly 3 Action Buttons (Sincronizar, Desconectar, Ver agenda) */}
+                    <div className="flex items-center space-x-2 shrink-0 self-end md:self-center">
+                      {/* 1. Sincronizar */}
+                      <button
+                        type="button"
+                        onClick={() => handleSyncNow(person)}
+                        disabled={isSyncing}
+                        className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+                        title="Sincronizar compromissos com o calendário"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isSyncing ? "animate-spin text-[#00a83e]" : ""}`} />
+                        <span>{isSyncing ? "Sincronizando..." : "Sincronizar"}</span>
+                      </button>
+
+                      {/* 2. Desconectar */}
+                      <button
+                        type="button"
+                        onClick={() => handleDisconnect(person)}
+                        className="px-3.5 py-2 rounded-xl text-xs font-bold text-red-600 hover:text-red-700 bg-red-50/60 hover:bg-red-50 border border-red-200/60 transition-all flex items-center space-x-1.5 cursor-pointer"
+                        title="Desconectar integração de calendário"
+                      >
+                        <Unlink className="w-3.5 h-3.5" />
+                        <span>Desconectar</span>
+                      </button>
+
+                      {/* 3. Ver agenda */}
+                      <button
+                        type="button"
+                        onClick={() => handleToggleSchedule(person)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold shadow-xs transition-all duration-200 flex items-center space-x-1.5 cursor-pointer ${
+                          isExpanded
+                            ? "bg-slate-900 text-white hover:bg-slate-800 shadow-md"
+                            : "bg-[#00a83e] hover:bg-emerald-700 text-white shadow-emerald-500/20 hover:shadow-md hover:shadow-emerald-500/30"
+                        }`}
+                        title="Visualizar agenda de compromissos deste vendedor"
+                      >
+                        <CalendarIcon className="w-3.5 h-3.5" />
+                        <span>{isExpanded ? "Ocultar agenda" : "Ver agenda"}</span>
+                        {isExpanded ? (
+                          <ChevronUp className="w-3.5 h-3.5 ml-0.5 opacity-80" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5 ml-0.5 opacity-80" />
+                        )}
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Inline Seller Schedule View in the same area */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <SellerScheduleInlineView
+                        salesperson={person}
+                        onClose={() => setExpandedSellerId(null)}
+                        onSync={() => handleSyncNow(person)}
+                        isSyncing={isSyncing}
+                      />
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}

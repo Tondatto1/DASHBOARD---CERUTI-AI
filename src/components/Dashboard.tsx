@@ -17,6 +17,10 @@ import {
   Search,
   Calendar,
   Briefcase,
+  ChevronLeft,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Salesperson, PlanInfo, ChatMessage } from "../types";
@@ -118,6 +122,26 @@ interface DashboardProps {
 
 export function Dashboard({ onLogout }: DashboardProps) {
   const [salespeople, setSalespeople] = useState<Salesperson[]>(INITIAL_SALESPEOPLE);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('ceruti_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('ceruti_sidebar_collapsed', String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDDIDropdownOpen, setIsDDIDropdownOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -238,64 +262,151 @@ export function Dashboard({ onLogout }: DashboardProps) {
     setIsDDIDropdownOpen(false);
   };
 
+  const navItems = [
+    { id: 'visao-geral' as const, label: 'Visão geral', icon: LayoutDashboard },
+    { id: 'equipe' as const, label: 'Equipe', icon: Users },
+    { id: 'monitoramento' as const, label: 'Monitoramento', icon: Activity },
+    { id: 'calendario' as const, label: 'Calendário', icon: Calendar },
+    { id: 'crm' as const, label: 'CRM', icon: Briefcase },
+  ];
+
   return (
     <div className="bg-gray-50 flex h-screen w-full overflow-hidden text-slate-800 font-sans">
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex">
-        <div className="p-6 flex items-center space-x-2">
-          <Logo className="w-8 h-8 shrink-0" />
-          <span className="text-xl font-bold tracking-tight text-slate-900">Ceruti</span>
-        </div>
-        <nav className="flex-1 px-4 space-y-1">
-          <button 
-            onClick={() => setActiveTab('visao-geral')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 ${activeTab === 'visao-geral' ? 'bg-emerald-50 text-[#00a83e]' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900/80'}`}
-          >
-            <LayoutDashboard className="w-5 h-5" />
-            <span>Visão geral</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('equipe')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 ${activeTab === 'equipe' ? 'bg-emerald-50 text-[#00a83e]' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900/80'}`}
-          >
-            <Users className="w-5 h-5" />
-            <span>Equipe</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('monitoramento')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 ${activeTab === 'monitoramento' ? 'bg-emerald-50 text-[#00a83e]' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900/80'}`}
-          >
-            <Activity className="w-5 h-5" />
-            <span>Monitoramento</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('calendario')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 ${activeTab === 'calendario' ? 'bg-emerald-50 text-[#00a83e]' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900/80'}`}
-          >
-            <Calendar className="w-5 h-5" />
-            <span>Calendário</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('crm')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 ${activeTab === 'crm' ? 'bg-emerald-50 text-[#00a83e]' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900/80'}`}
-          >
-            <Briefcase className="w-5 h-5" />
-            <span>CRM</span>
-          </button>
-        </nav>
-        <div className="p-6 border-t border-slate-100 items-center flex justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center">
-              <div className="bg-slate-400 w-full h-full flex items-center justify-center text-white text-xs">A</div>
+      <aside
+        className={`${
+          isSidebarCollapsed ? 'w-20' : 'w-64'
+        } bg-white border-r border-slate-200 flex flex-col hidden md:flex transition-[width] duration-300 ease-in-out shrink-0 select-none`}
+      >
+        {/* Top Header of Sidebar */}
+        {isSidebarCollapsed ? (
+          <div className="py-4 px-2 flex flex-col items-center space-y-2 border-b border-slate-100">
+            <Logo className="w-8 h-8 shrink-0" />
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="p-1.5 text-slate-400 hover:text-[#00a83e] hover:bg-emerald-50 rounded-lg transition-colors"
+              title="Expandir menu lateral"
+              aria-label="Expandir menu lateral"
+            >
+              <PanelLeftOpen className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="p-5 flex items-center justify-between border-b border-slate-100">
+            <div className="flex items-center space-x-2.5">
+              <Logo className="w-8 h-8 shrink-0" />
+              <span className="text-xl font-bold tracking-tight text-slate-900">Ceruti</span>
             </div>
-            <div className="flex flex-col text-left">
-              <span className="text-sm font-semibold text-slate-900">Admin</span>
-              <span className="text-xs text-slate-500">Ceruti</span>
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+              title="Recolher menu lateral"
+              aria-label="Recolher menu lateral"
+            >
+              <PanelLeftClose className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Navigation Items */}
+        <nav className={`flex-1 ${isSidebarCollapsed ? 'px-2 py-4 space-y-2' : 'px-3 py-4 space-y-1'} overflow-y-auto`}>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            
+            if (isSidebarCollapsed) {
+              return (
+                <div key={item.id} className="relative group flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-200 active:scale-95 ${
+                      isActive
+                        ? 'bg-emerald-50 text-[#00a83e] shadow-xs ring-1 ring-emerald-200/60'
+                        : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                    aria-label={item.label}
+                  >
+                    <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-[#00a83e]' : 'text-slate-500'}`} />
+                  </button>
+
+                  {/* Tooltip on hover */}
+                  <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 z-50 whitespace-nowrap top-1/2 -translate-y-1/2 flex items-center">
+                    {item.label}
+                    <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900" />
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl font-medium transition-all duration-200 active:scale-95 ${
+                  isActive
+                    ? 'bg-emerald-50 text-[#00a83e] font-semibold ring-1 ring-emerald-200/50'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+              >
+                <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-[#00a83e]' : 'text-slate-500'}`} />
+                <span className="text-sm truncate">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* User Profile and Logout */}
+        {isSidebarCollapsed ? (
+          <div className="p-3 border-t border-slate-100 flex flex-col items-center space-y-3">
+            <div className="relative group">
+              <div className="w-9 h-9 rounded-full bg-slate-200 border-2 border-white shadow-xs overflow-hidden flex items-center justify-center shrink-0 cursor-default">
+                <div className="bg-slate-400 w-full h-full flex items-center justify-center text-white text-xs font-bold">A</div>
+              </div>
+              <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 z-50 whitespace-nowrap top-1/2 -translate-y-1/2 flex items-center">
+                Admin &bull; Ceruti
+                <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900" />
+              </div>
+            </div>
+            <div className="relative group">
+              <button
+                type="button"
+                onClick={onLogout}
+                className="p-2 text-slate-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                aria-label="Sair"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+              <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 z-50 whitespace-nowrap top-1/2 -translate-y-1/2 flex items-center">
+                Sair
+                <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900" />
+              </div>
             </div>
           </div>
-          <button onClick={onLogout} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
+        ) : (
+          <div className="p-4 border-t border-slate-100 items-center flex justify-between">
+            <div className="flex items-center space-x-3 min-w-0">
+              <div className="w-9 h-9 rounded-full bg-slate-200 border-2 border-white shadow-xs overflow-hidden flex items-center justify-center shrink-0">
+                <div className="bg-slate-400 w-full h-full flex items-center justify-center text-white text-xs font-bold">A</div>
+              </div>
+              <div className="flex flex-col text-left min-w-0">
+                <span className="text-sm font-semibold text-slate-900 truncate">Admin</span>
+                <span className="text-xs text-slate-500 truncate">Ceruti</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onLogout}
+              className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+              title="Sair do sistema"
+              aria-label="Sair"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </aside>
 
       <main className="flex-1 flex flex-col overflow-hidden relative">
@@ -318,17 +429,32 @@ export function Dashboard({ onLogout }: DashboardProps) {
             <Logo className="w-8 h-8 shrink-0" />
             <span className="text-lg font-bold tracking-tight text-slate-900 hidden sm:block">Ceruti</span>
           </div>
-          <h1 className="text-lg font-bold text-slate-900 hidden md:block">
-            {activeTab === 'visao-geral'
-              ? 'Visão Geral'
-              : activeTab === 'equipe'
-              ? 'Gestão de Acessos'
-              : activeTab === 'monitoramento'
-              ? 'Monitoramento Individual dos Vendedores'
-              : activeTab === 'calendario'
-              ? 'Integração de Calendário'
-              : 'Gestão de CRM e Pipeline Agro'}
-          </h1>
+          <div className="hidden md:flex items-center space-x-3">
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+              title={isSidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
+              aria-label={isSidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
+            >
+              {isSidebarCollapsed ? (
+                <PanelLeftOpen className="w-5 h-5 text-slate-600" />
+              ) : (
+                <PanelLeftClose className="w-5 h-5 text-slate-400" />
+              )}
+            </button>
+            <h1 className="text-lg font-bold text-slate-900">
+              {activeTab === 'visao-geral'
+                ? 'Visão Geral'
+                : activeTab === 'equipe'
+                ? 'Gestão de Acessos'
+                : activeTab === 'monitoramento'
+                ? 'Monitoramento Individual dos Vendedores'
+                : activeTab === 'calendario'
+                ? 'Integração de Calendário'
+                : 'Gestão de CRM e Pipeline Agro'}
+            </h1>
+          </div>
           <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
             {activeTab === 'equipe' && (
               <button
