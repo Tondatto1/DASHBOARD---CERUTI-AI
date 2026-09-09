@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   Share2,
+  BarChart3,
 } from "lucide-react";
 import { CRMDeal, CRMStage, CRMIntegrationConfig, CRMColumn, CRMTag, Salesperson } from "../types";
 import {
@@ -27,15 +28,17 @@ import { CRMColumnManagerModal } from "./crm/CRMColumnManagerModal";
 import { CRMDealDetailModal } from "./crm/CRMDealDetailModal";
 import { CRMNewDealModal } from "./crm/CRMNewDealModal";
 import { CRMIntegrationsTab } from "./crm/CRMIntegrationsTab";
+import { CRMMetricsTab } from "./crm/CRMMetricsTab";
 import { CRMShareModal } from "./crm/CRMShareModal";
+import { CRMImportExportModal } from "./crm/CRMImportExportModal";
 
 interface CRMViewProps {
   salespeople?: Salesperson[];
 }
 
 export function CRMView({ salespeople }: CRMViewProps) {
-  // Main Tab: Pipeline vs Integrations
-  const [activeTab, setActiveTab] = useState<"pipeline" | "integrations">("pipeline");
+  // Main Tab: Pipeline vs Integrations vs Metrics
+  const [activeTab, setActiveTab] = useState<"pipeline" | "integrations" | "metrics">("pipeline");
 
   // View Mode: Kanban, List, Gantt
   const [viewMode, setViewMode] = useState<"kanban" | "lista" | "gantt">("kanban");
@@ -62,6 +65,7 @@ export function CRMView({ salespeople }: CRMViewProps) {
   const [newDealDefaultStage, setNewDealDefaultStage] = useState<string | null>(null);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
   const [isColumnManagerOpen, setIsColumnManagerOpen] = useState(false);
+  const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
 
   // Abertura automática de card via link direto (?tab=crm&deal=...)
   useEffect(() => {
@@ -385,6 +389,22 @@ export function CRMView({ salespeople }: CRMViewProps) {
     setColumns(newCols);
   };
 
+  // Import / Export Handler
+  const handleImportSuccess = ({
+    deals: importedDeals,
+    columns: importedCols,
+    tags: importedTags,
+  }: {
+    deals: CRMDeal[];
+    columns: CRMColumn[];
+    tags: CRMTag[];
+    mode: "merge" | "replace";
+  }) => {
+    setDeals(importedDeals);
+    setColumns(importedCols);
+    setTags(importedTags);
+  };
+
   // Integration Handlers
   const handleToggleIntegration = (integId: string) => {
     setIntegrations((prev) =>
@@ -446,66 +466,7 @@ export function CRMView({ salespeople }: CRMViewProps) {
         )}
       </AnimatePresence>
 
-      {/* Faixa Superior: Indicadores Executivos do Funil Comercial */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center justify-between">
-          <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              Volume no Funil
-            </span>
-            <span className="text-lg sm:text-xl font-black text-slate-900 mt-0.5 block tracking-tight">
-              {formatBRL(metrics.totalPipelineValue)}
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#00a83e] flex items-center justify-center font-bold">
-            <DollarSign className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center justify-between">
-          <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              Oportunidades
-            </span>
-            <span className="text-lg sm:text-xl font-black text-slate-900 mt-0.5 block tracking-tight">
-              {metrics.totalDeals} negócios
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
-            <Briefcase className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center justify-between">
-          <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              Ticket Médio
-            </span>
-            <span className="text-lg sm:text-xl font-black text-slate-900 mt-0.5 block tracking-tight">
-              {formatBRL(metrics.avgTicket)}
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center justify-between">
-          <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              Faturamento
-            </span>
-            <span className="text-lg sm:text-xl font-black text-[#00a83e] mt-0.5 block tracking-tight">
-              {formatBRL(metrics.totalSalesValue)}
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#00a83e] flex items-center justify-center font-bold">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-        </div>
-      </div>
-
-      {/* Alternador Principal: Funil Comercial vs Integrações */}
+      {/* Alternador Principal: Funil Comercial vs Integração CRM vs Métricas */}
       <div className="flex items-center space-x-2 border-b border-slate-200/80 pb-1">
         <button
           type="button"
@@ -530,12 +491,25 @@ export function CRMView({ salespeople }: CRMViewProps) {
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          <span>Integrações ERP / CRM ({metrics.activeIntegrationsCount})</span>
+          <span>Integração CRM</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("metrics")}
+          className={`py-2 px-4 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center space-x-2 ${
+            activeTab === "metrics"
+              ? "bg-[#00a83e] text-white shadow-xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+          }`}
+        >
+          <BarChart3 className="w-4 h-4" />
+          <span>Painel</span>
         </button>
       </div>
 
       {/* Conteúdo da Aba */}
-      {activeTab === "pipeline" ? (
+      {activeTab === "pipeline" && (
         <div className="space-y-4">
           {/* Barra de Filtros Completa */}
           <CRMFilterBar
@@ -564,6 +538,7 @@ export function CRMView({ salespeople }: CRMViewProps) {
             }}
             onOpenTagManagerModal={() => setIsTagManagerOpen(true)}
             onOpenColumnManagerModal={() => setIsColumnManagerOpen(true)}
+            onOpenImportExportModal={() => setIsImportExportModalOpen(true)}
             onResetFilters={handleResetFilters}
             activeFiltersCount={activeFiltersCount}
             salespeopleList={salespeopleList}
@@ -611,12 +586,23 @@ export function CRMView({ salespeople }: CRMViewProps) {
             />
           )}
         </div>
-      ) : (
+      )}
+
+      {activeTab === "integrations" && (
         <CRMIntegrationsTab
           integrations={integrations}
           onToggleIntegration={handleToggleIntegration}
           onSyncIntegration={handleSyncIntegration}
           onSaveIntegrationSettings={handleSaveIntegrationSettings}
+        />
+      )}
+
+      {activeTab === "metrics" && (
+        <CRMMetricsTab
+          deals={deals}
+          columns={columns}
+          metrics={metrics}
+          salespeople={salespeople || []}
         />
       )}
 
@@ -697,6 +683,21 @@ export function CRMView({ salespeople }: CRMViewProps) {
             onEditColumn={handleEditColumn}
             onDeleteColumn={handleDeleteColumn}
             onReorderColumns={handleReorderColumns}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Modal: Importação & Exportação / Modelo de Planilha */}
+      <AnimatePresence>
+        {isImportExportModalOpen && (
+          <CRMImportExportModal
+            isOpen={isImportExportModalOpen}
+            onClose={() => setIsImportExportModalOpen(false)}
+            deals={deals}
+            columns={columns}
+            tags={tags}
+            onImportSuccess={handleImportSuccess}
+            onShowToast={showToast}
           />
         )}
       </AnimatePresence>

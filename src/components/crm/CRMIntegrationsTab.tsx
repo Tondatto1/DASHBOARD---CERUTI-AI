@@ -1,15 +1,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Link2,
-  Unlink,
-  CheckCircle2,
   RefreshCw,
   X,
-  ExternalLink,
-  ShieldCheck,
-  Zap,
-  Activity,
   Check,
 } from "lucide-react";
 import { CRMIntegrationConfig } from "../../types";
@@ -142,22 +135,6 @@ export const CRMIntegrationsTab: React.FC<CRMIntegrationsTabProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Banner Superior */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white border border-slate-700/50 shadow-xl relative overflow-hidden">
-        <div className="relative z-10 max-w-2xl space-y-2">
-          <div className="inline-flex items-center space-x-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Conectores Oficiais Homologados</span>
-          </div>
-          <h3 className="text-xl sm:text-2xl font-black">
-            Integrações de ERP & CRM Agro
-          </h3>
-          <p className="text-slate-300 text-xs sm:text-sm">
-            Sincronize pedidos, contratos de barter, cotações de grãos e visitas a campo diretamente com os ERPs e CRMs utilizados pela sua equipe.
-          </p>
-        </div>
-      </div>
-
       {/* Grid de Integrações */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {integrations.map((integ) => {
@@ -168,41 +145,28 @@ export const CRMIntegrationsTab: React.FC<CRMIntegrationsTabProps> = ({
               key={integ.id}
               className="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
             >
-              <div>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${meta.gradient} text-white font-black text-sm flex items-center justify-center shadow-xs`}
-                    >
-                      {meta.monogram}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm">{integ.name}</h4>
-                      <span className="text-[11px] text-slate-400 block">{meta.tagline}</span>
-                    </div>
-                  </div>
-
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                      integ.status === "connected"
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        : "bg-slate-100 text-slate-500 border-slate-200"
-                    }`}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center space-x-3">
+                  <div
+                    className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${meta.gradient} text-white font-black text-sm flex items-center justify-center shadow-xs`}
                   >
-                    {integ.status === "connected" ? "Ativo" : "Desconectado"}
-                  </span>
+                    {meta.monogram}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">{integ.name}</h4>
+                    <span className="text-[11px] text-slate-400 block">{meta.tagline}</span>
+                  </div>
                 </div>
 
-                <p className="text-xs text-slate-600 mt-3">{integ.description}</p>
-
-                <div className="mt-4 space-y-1.5 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
-                  {meta.features.map((feat, i) => (
-                    <div key={i} className="flex items-center space-x-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>{feat}</span>
-                    </div>
-                  ))}
-                </div>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    integ.status === "connected"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-slate-100 text-slate-500 border-slate-200"
+                  }`}
+                >
+                  {integ.status === "connected" ? "Ativo" : "Desconectado"}
+                </span>
               </div>
 
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between">

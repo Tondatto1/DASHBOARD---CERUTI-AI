@@ -1,17 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   CreditCard,
-  CheckCircle2,
   Users,
   Plus,
   Minus,
   Sparkles,
-  ShieldCheck,
   Zap,
   ArrowRight,
-  TrendingUp,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { usePressAndHold } from "../hooks/usePressAndHold";
 
 interface PlansViewProps {
   currentCollaboratorCount?: number;
@@ -23,7 +21,15 @@ export function PlansView({
   // Estado do plano ativo e quantidade de colaboradores
   const [selectedPlanId, setSelectedPlanId] = useState<"mensal" | "semestral" | "anual">("anual");
   const [collaboratorsCount, setCollaboratorsCount] = useState<number>(currentCollaboratorCount);
+  const [inputValue, setInputValue] = useState<string>(String(currentCollaboratorCount));
   const [notificationMsg, setNotificationMsg] = useState<string | null>(null);
+
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Sincroniza o valor exibido no input sempre que a quantidade numérica mudar
+  useEffect(() => {
+    setInputValue(String(collaboratorsCount));
+  }, [collaboratorsCount]);
 
   const showFeedback = (msg: string) => {
     setNotificationMsg(msg);
@@ -40,13 +46,56 @@ export function PlansView({
   const currentPrice = planPrices[selectedPlanId];
   const totalMonthlyPrice = currentPrice * collaboratorsCount;
 
-  const handleIncrement = () => {
-    setCollaboratorsCount((prev) => prev + 1);
+  // Aceleração contínua ao manter pressionado o botão de diminuir (-)
+  const decrementHold = usePressAndHold({
+    onStep: (step) => {
+      setCollaboratorsCount((prev) => Math.max(1, prev - step));
+    },
+    disabled: collaboratorsCount <= 1,
+  });
+
+  // Aceleração contínua ao manter pressionado o botão de aumentar (+)
+  const incrementHold = usePressAndHold({
+    onStep: (step) => {
+      setCollaboratorsCount((prev) => Math.min(5000, prev + step));
+    },
+  });
+
+  // Edição direta pelo campo de input
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    // Permite apenas caracteres numéricos
+    const clean = raw.replace(/\D/g, "");
+    setInputValue(clean);
+
+    if (clean !== "") {
+      const num = parseInt(clean, 10);
+      if (!isNaN(num) && num >= 1) {
+        setCollaboratorsCount(Math.min(5000, num));
+      }
+    }
   };
 
-  const handleDecrement = () => {
-    if (collaboratorsCount > 1) {
-      setCollaboratorsCount((prev) => prev - 1);
+  const handleInputBlur = () => {
+    if (inputValue === "" || parseInt(inputValue, 10) < 1 || isNaN(parseInt(inputValue, 10))) {
+      setCollaboratorsCount(1);
+      setInputValue("1");
+    } else {
+      const num = Math.min(Math.max(1, parseInt(inputValue, 10)), 5000);
+      setCollaboratorsCount(num);
+      setInputValue(String(num));
+    }
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      (e.target as HTMLInputElement).blur();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setCollaboratorsCount((prev) => Math.min(5000, prev + 1));
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setCollaboratorsCount((prev) => Math.max(1, prev - 1));
     }
   };
 
@@ -101,15 +150,6 @@ export function PlansView({
             Gerencie sua assinatura, consulte o plano contratado e dimensione os acessos da sua equipe.
           </p>
         </div>
-
-        <div className="flex items-center space-x-3 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60 self-start md:self-auto">
-          <div className="flex items-center space-x-2 px-3.5 py-1.5 bg-white rounded-xl shadow-xs border border-slate-200">
-            <ShieldCheck className="w-4 h-4 text-[#00a83e]" />
-            <span className="text-xs font-bold text-slate-800">
-              Ambiente Seguro Ceruti
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Seção 1: 1 Card de Plano Atual Contratado + 1 Card de Aumentar Quantidade de Colaboradores */}
@@ -139,9 +179,6 @@ export function PlansView({
               <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
                 Plano {selectedPlanId === "anual" ? "Anual" : selectedPlanId === "semestral" ? "Semestral" : "Mensal"}
               </h3>
-              <p className="text-xs text-slate-300 font-medium mt-1">
-                Acesso completo ao CRM Agro, Monitoramento de Conversas e Gestão da Equipe Comercial.
-              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 my-6 pt-4 border-t border-slate-700/60">
@@ -162,21 +199,6 @@ export function PlansView({
                 </span>
               </div>
             </div>
-
-            <ul className="space-y-2 text-xs text-slate-200">
-              <li className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Gestão ilimitada de produtores, lavouras e negócios</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Integração de WhatsApp com acompanhamento em tempo real</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Suporte prioritário Ceruti dedicado</span>
-              </li>
-            </ul>
           </div>
 
           <div className="mt-6 pt-4 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400 relative z-10">
@@ -228,33 +250,50 @@ export function PlansView({
                 </span>
               </div>
 
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center justify-between gap-3 sm:gap-4">
                 <button
                   type="button"
-                  onClick={handleDecrement}
+                  {...decrementHold.buttonProps}
                   disabled={collaboratorsCount <= 1}
-                  className="w-12 h-12 rounded-2xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs active:scale-95"
-                  title="Diminuir vagas"
+                  className="w-12 h-12 rounded-2xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs active:scale-95 select-none touch-manipulation"
+                  title="Diminuir vagas (clique ou segure pressionado para acelerar)"
                 >
-                  <Minus className="w-5 h-5" />
+                  <Minus className="w-5 h-5 pointer-events-none" />
                 </button>
 
-                <div className="flex-1 text-center bg-white py-2.5 px-4 rounded-2xl border border-slate-200 shadow-xs">
-                  <span className="text-2xl font-black text-slate-900 block">
-                    {collaboratorsCount}
-                  </span>
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                {/* Input direto editável e com auto-seleção */}
+                <div
+                  onClick={() => inputRef.current?.focus()}
+                  className="flex-1 text-center bg-white py-2 px-4 rounded-2xl border border-slate-200 hover:border-slate-300 focus-within:border-[#00a83e] focus-within:ring-2 focus-within:ring-emerald-500/20 shadow-xs transition-all flex flex-col items-center justify-center cursor-text group"
+                  title="Clique para digitar o número diretamente"
+                >
+                  <div className="w-full flex items-center justify-center">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={inputValue}
+                      onChange={handleInputChange}
+                      onBlur={handleInputBlur}
+                      onKeyDown={handleInputKeyDown}
+                      onFocus={(e) => e.target.select()}
+                      className="w-full text-center text-2xl sm:text-3xl font-black text-slate-900 bg-transparent border-0 focus:outline-none focus:ring-0 p-0 m-0 tracking-tight select-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-text"
+                      aria-label="Quantidade de Colaboradores"
+                    />
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mt-0.5 pointer-events-none select-none">
                     {collaboratorsCount === 1 ? "Colaborador" : "Colaboradores"}
                   </span>
                 </div>
 
                 <button
                   type="button"
-                  onClick={handleIncrement}
-                  className="w-12 h-12 rounded-2xl bg-[#00a83e] hover:bg-emerald-700 text-white font-bold flex items-center justify-center transition-colors shadow-xs cursor-pointer active:scale-95"
-                  title="Aumentar vagas"
+                  {...incrementHold.buttonProps}
+                  className="w-12 h-12 rounded-2xl bg-[#00a83e] hover:bg-emerald-700 text-white font-bold flex items-center justify-center transition-colors shadow-xs cursor-pointer active:scale-95 select-none touch-manipulation"
+                  title="Aumentar vagas (clique ou segure pressionado para acelerar)"
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className="w-5 h-5 pointer-events-none" />
                 </button>
               </div>
 
@@ -328,21 +367,6 @@ export function PlansView({
                   / mês por colaborador
                 </span>
               </div>
-
-              <ul className="space-y-2.5 text-xs text-slate-600 mb-6">
-                <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Acesso completo ao CRM Agro</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Monitoramento de conversas e visitas</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Faturamento mensal recorrente</span>
-                </li>
-              </ul>
             </div>
 
             <button
@@ -385,21 +409,6 @@ export function PlansView({
                   / mês por colaborador
                 </span>
               </div>
-
-              <ul className="space-y-2.5 text-xs text-slate-600 mb-6">
-                <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Todos os recursos do CRM & Equipe</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Suporte via WhatsApp prioritário</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Desconto semestral aplicado</span>
-                </li>
-              </ul>
             </div>
 
             <button
@@ -448,21 +457,6 @@ export function PlansView({
                   / mês por colaborador
                 </span>
               </div>
-
-              <ul className="space-y-2.5 text-xs text-slate-700 mb-6 font-medium">
-                <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Todos os módulos ilimitados</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Atendimento prioritário via WhatsApp</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Máxima economia por licença</span>
-                </li>
-              </ul>
             </div>
 
             <button

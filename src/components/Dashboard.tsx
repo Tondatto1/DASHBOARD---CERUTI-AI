@@ -1069,10 +1069,10 @@ export function Dashboard({ onLogout }: DashboardProps) {
           rel="noopener noreferrer"
           className="flex items-center space-x-2 bg-[#25D366] hover:bg-[#20ba5a] text-white px-4 py-3 rounded-full shadow-lg shadow-emerald-600/30 hover:shadow-xl hover:shadow-emerald-600/40 hover:-translate-y-0.5 transition-all duration-200 active:scale-95 font-semibold text-sm"
           title="Falar no WhatsApp: (67) 99819-0294"
-          aria-label="Falar no WhatsApp com suporte Ceruti"
+          aria-label="Falar no WhatsApp com suporte"
         >
           <MessageCircle className="w-5 h-5 fill-current" />
-          <span className="hidden sm:inline">Suporte Ceruti</span>
+          <span className="hidden sm:inline">Suporte</span>
         </a>
       </div>
 

@@ -14,6 +14,7 @@ import {
   RotateCcw,
   Columns3,
   ChevronDown,
+  ArrowUpDown,
 } from "lucide-react";
 import { CRMTag, CRMDeal } from "../../types";
 
@@ -42,6 +43,7 @@ interface CRMFilterBarProps {
   onOpenNewDealModal: () => void;
   onOpenTagManagerModal: () => void;
   onOpenColumnManagerModal: () => void;
+  onOpenImportExportModal: () => void;
   onResetFilters: () => void;
   activeFiltersCount: number;
   salespeopleList: string[];
@@ -70,6 +72,7 @@ export const CRMFilterBar: React.FC<CRMFilterBarProps> = ({
   onOpenNewDealModal,
   onOpenTagManagerModal,
   onOpenColumnManagerModal,
+  onOpenImportExportModal,
   onResetFilters,
   activeFiltersCount,
   salespeopleList,
@@ -170,6 +173,17 @@ export const CRMFilterBar: React.FC<CRMFilterBarProps> = ({
           >
             <Columns3 className="w-3.5 h-3.5 text-sky-600" />
             <span>Colunas</span>
+          </button>
+
+          {/* Botão Importar / Exportar (Destacado & Minimalista) */}
+          <button
+            type="button"
+            onClick={onOpenImportExportModal}
+            className="py-1.5 px-3.5 bg-emerald-50/90 hover:bg-emerald-100 text-emerald-900 border border-emerald-300/90 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95 group"
+            title="Importar e exportar dados e modelo padrão de planilha"
+          >
+            <ArrowUpDown className="w-3.5 h-3.5 text-[#00a83e] group-hover:scale-110 transition-transform" />
+            <span>Importar / Exportar</span>
           </button>
 
           {/* Botão Novo Negócio */}
