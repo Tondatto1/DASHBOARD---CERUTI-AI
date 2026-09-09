@@ -3,14 +3,44 @@ import { Login } from './components/Login';
 import { Dashboard } from './components/Dashboard';
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('deal') || params.get('tab') || localStorage.getItem('ceruti_logged_in') === 'true') {
+          return true;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return false;
+  });
+
+  const handleLogin = () => {
+    try {
+      localStorage.setItem('ceruti_logged_in', 'true');
+    } catch {
+      // ignore
+    }
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem('ceruti_logged_in');
+    } catch {
+      // ignore
+    }
+    setIsLoggedIn(false);
+  };
 
   return (
     <>
       {isLoggedIn ? (
-        <Dashboard onLogout={() => setIsLoggedIn(false)} />
+        <Dashboard onLogout={handleLogout} />
       ) : (
-        <Login onLogin={() => setIsLoggedIn(true)} />
+        <Login onLogin={handleLogin} />
       )}
     </>
   );

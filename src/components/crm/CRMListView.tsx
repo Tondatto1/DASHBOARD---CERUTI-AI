@@ -1,14 +1,17 @@
 import React from "react";
-import { Phone, Pencil, User, MapPin } from "lucide-react";
-import { CRMDeal, CRMColumn, CRMTag, CRMStage } from "../../types";
+import { Phone, Pencil, User, MapPin, Share2 } from "lucide-react";
+import { CRMDeal, CRMColumn, CRMTag, CRMStage, Salesperson } from "../../types";
 import { formatBRL } from "../../data/crmData";
+import { openDealInWhatsApp, copyDealShareLink } from "../../utils/crmShare";
 
 interface CRMListViewProps {
   deals: CRMDeal[];
   columns: CRMColumn[];
   availableTags: CRMTag[];
+  salespeople?: Salesperson[];
   onOpenDealDetail: (deal: CRMDeal) => void;
   onSetStage: (dealId: string, stage: CRMStage) => void;
+  onOpenShareModal?: (deal: CRMDeal) => void;
   onShowToast: (msg: string) => void;
 }
 
@@ -16,8 +19,10 @@ export const CRMListView: React.FC<CRMListViewProps> = ({
   deals,
   columns,
   availableTags,
+  salespeople,
   onOpenDealDetail,
   onSetStage,
+  onOpenShareModal,
   onShowToast,
 }) => {
   return (
@@ -139,19 +144,30 @@ export const CRMListView: React.FC<CRMListViewProps> = ({
                       <div className="flex items-center justify-end space-x-1.5">
                         <button
                           type="button"
-                          onClick={() => onOpenDealDetail(deal)}
+                          onClick={() => {
+                            if (onOpenShareModal) onOpenShareModal(deal);
+                            else copyDealShareLink(deal, onShowToast);
+                          }}
                           className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors cursor-pointer"
-                          title="Ver / Editar"
+                          title="Compartilhar card específico"
                         >
-                          <Pencil className="w-3.5 h-3.5" />
+                          <Share2 className="w-3.5 h-3.5 text-slate-500" />
                         </button>
                         <button
                           type="button"
-                          onClick={() => onShowToast(`Iniciando WhatsApp para ${deal.clientName}`)}
+                          onClick={() => openDealInWhatsApp(deal, salespeople, onShowToast)}
                           className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-[#00a83e] rounded-lg transition-colors cursor-pointer"
-                          title="Falar no WhatsApp"
+                          title="Falar no WhatsApp com mensagem estruturada"
                         >
                           <Phone className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onOpenDealDetail(deal)}
+                          className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors cursor-pointer"
+                          title="Ver / Editar detalhes"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>

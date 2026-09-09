@@ -21,6 +21,8 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
+  CreditCard,
+  MessageCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Salesperson, PlanInfo, ChatMessage } from "../types";
@@ -30,6 +32,7 @@ import { Overview } from "./Overview";
 import { SellerMonitoring } from "./SellerMonitoring";
 import { CalendarView } from "./CalendarView";
 import { CRMView } from "./CRMView";
+import { PlansView } from "./PlansView";
 
 const COUNTRIES = [
   { code: "+55", flag: "br", name: "Brasil" },
@@ -55,7 +58,7 @@ const COUNTRIES = [
 
 const MOCK_PLAN: PlanInfo = {
   name: "Plano Semestral",
-  maxAccesses: 10,
+  maxAccesses: 30,
 };
 
 const MOCK_HISTORY_1: ChatMessage[] = [
@@ -80,17 +83,15 @@ const INITIAL_SALESPEOPLE: Salesperson[] = [
     lastConversation: "Hoje, 10:36",
     plansGeneratedMonth: 82,
     history24h: MOCK_HISTORY_1,
-    calendarIntegration: {
-      status: "disconnected",
-    },
+    calendarIntegration: { status: "disconnected" },
   },
   {
     id: "2",
     name: "Maria Oliveira",
     whatsapp: "+55 11 91234-5678",
     status: "Ativo",
-    messageCount: 89,
-    lastConversation: "Ontem, 18:45",
+    messageCount: 118,
+    lastConversation: "Hoje, 11:20",
     plansGeneratedMonth: 66,
     history24h: MOCK_HISTORY_2,
     calendarIntegration: {
@@ -110,9 +111,249 @@ const INITIAL_SALESPEOPLE: Salesperson[] = [
     lastConversation: "Sem registros",
     plansGeneratedMonth: 0,
     history24h: [],
-    calendarIntegration: {
-      status: "disconnected",
-    },
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "4",
+    name: "Beatriz Santos",
+    whatsapp: "+55 11 97654-3210",
+    status: "Ativo",
+    messageCount: 94,
+    lastConversation: "Hoje, 09:45",
+    plansGeneratedMonth: 54,
+    history24h: MOCK_HISTORY_1,
+    calendarIntegration: { status: "connected", provider: "google", email: "beatriz.santos@ceruti.com.br" },
+  },
+  {
+    id: "5",
+    name: "Lucas Ferreira",
+    whatsapp: "+55 31 98877-6655",
+    status: "Ativo",
+    messageCount: 132,
+    lastConversation: "Hoje, 12:15",
+    plansGeneratedMonth: 71,
+    history24h: MOCK_HISTORY_2,
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "6",
+    name: "Juliana Costa",
+    whatsapp: "+55 41 99123-4567",
+    status: "Ativo",
+    messageCount: 87,
+    lastConversation: "Ontem, 16:30",
+    plansGeneratedMonth: 48,
+    history24h: MOCK_HISTORY_1,
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "7",
+    name: "Rodrigo Almeida",
+    whatsapp: "+55 51 98456-7890",
+    status: "Ativo",
+    messageCount: 105,
+    lastConversation: "Hoje, 08:50",
+    plansGeneratedMonth: 62,
+    history24h: MOCK_HISTORY_2,
+    calendarIntegration: { status: "connected", provider: "google", email: "rodrigo.almeida@ceruti.com.br" },
+  },
+  {
+    id: "8",
+    name: "Fernanda Lima",
+    whatsapp: "+55 61 99876-5432",
+    status: "Ativo",
+    messageCount: 0,
+    lastConversation: "Sem registros",
+    plansGeneratedMonth: 0,
+    history24h: [],
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "9",
+    name: "Gabriel Martins",
+    whatsapp: "+55 19 98111-2233",
+    status: "Ativo",
+    messageCount: 76,
+    lastConversation: "Ontem, 17:40",
+    plansGeneratedMonth: 39,
+    history24h: MOCK_HISTORY_1,
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "10",
+    name: "Larissa Rocha",
+    whatsapp: "+55 81 99222-3344",
+    status: "Ativo",
+    messageCount: 120,
+    lastConversation: "Hoje, 11:55",
+    plansGeneratedMonth: 68,
+    history24h: MOCK_HISTORY_2,
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "11",
+    name: "Matheus Ribeiro",
+    whatsapp: "+55 71 98333-4455",
+    status: "Ativo",
+    messageCount: 64,
+    lastConversation: "Ontem, 14:10",
+    plansGeneratedMonth: 32,
+    history24h: MOCK_HISTORY_1,
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "12",
+    name: "Camila Carvalho",
+    whatsapp: "+55 48 99444-5566",
+    status: "Ativo",
+    messageCount: 98,
+    lastConversation: "Hoje, 10:12",
+    plansGeneratedMonth: 58,
+    history24h: MOCK_HISTORY_2,
+    calendarIntegration: { status: "connected", provider: "google", email: "camila.carvalho@ceruti.com.br" },
+  },
+  {
+    id: "13",
+    name: "Bruno Henrique",
+    whatsapp: "+55 85 98555-6677",
+    status: "Ativo",
+    messageCount: 112,
+    lastConversation: "Hoje, 09:30",
+    plansGeneratedMonth: 64,
+    history24h: MOCK_HISTORY_1,
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "14",
+    name: "Amanda Duarte",
+    whatsapp: "+55 27 99666-7788",
+    status: "Ativo",
+    messageCount: 83,
+    lastConversation: "Ontem, 19:20",
+    plansGeneratedMonth: 45,
+    history24h: MOCK_HISTORY_2,
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "15",
+    name: "Thiago Mendes",
+    whatsapp: "+55 62 98777-8899",
+    status: "Ativo",
+    messageCount: 0,
+    lastConversation: "Sem registros",
+    plansGeneratedMonth: 0,
+    history24h: [],
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "16",
+    name: "Letícia Ramos",
+    whatsapp: "+55 11 97888-9900",
+    status: "Ativo",
+    messageCount: 150,
+    lastConversation: "Hoje, 12:05",
+    plansGeneratedMonth: 88,
+    history24h: MOCK_HISTORY_1,
+    calendarIntegration: { status: "connected", provider: "google", email: "leticia.ramos@ceruti.com.br" },
+  },
+  {
+    id: "17",
+    name: "Rafael Barbosa",
+    whatsapp: "+55 21 98999-0011",
+    status: "Ativo",
+    messageCount: 91,
+    lastConversation: "Ontem, 18:15",
+    plansGeneratedMonth: 52,
+    history24h: MOCK_HISTORY_2,
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "18",
+    name: "Patrícia Gomes",
+    whatsapp: "+55 31 99000-1122",
+    status: "Ativo",
+    messageCount: 78,
+    lastConversation: "Ontem, 15:40",
+    plansGeneratedMonth: 41,
+    history24h: MOCK_HISTORY_1,
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "19",
+    name: "Diego Farias",
+    whatsapp: "+55 41 98112-2334",
+    status: "Ativo",
+    messageCount: 109,
+    lastConversation: "Hoje, 11:10",
+    plansGeneratedMonth: 60,
+    history24h: MOCK_HISTORY_2,
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "20",
+    name: "Vanessa Pires",
+    whatsapp: "+55 51 99223-3445",
+    status: "Ativo",
+    messageCount: 68,
+    lastConversation: "Ontem, 13:50",
+    plansGeneratedMonth: 35,
+    history24h: MOCK_HISTORY_1,
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "21",
+    name: "Eduardo Moreira",
+    whatsapp: "+55 61 98334-4556",
+    status: "Ativo",
+    messageCount: 125,
+    lastConversation: "Hoje, 10:50",
+    plansGeneratedMonth: 74,
+    history24h: MOCK_HISTORY_2,
+    calendarIntegration: { status: "connected", provider: "google", email: "eduardo.moreira@ceruti.com.br" },
+  },
+  {
+    id: "22",
+    name: "Priscila Nogueira",
+    whatsapp: "+55 19 99445-5667",
+    status: "Ativo",
+    messageCount: 0,
+    lastConversation: "Sem registros",
+    plansGeneratedMonth: 0,
+    history24h: [],
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "23",
+    name: "Felipe Castro",
+    whatsapp: "+55 81 98556-6778",
+    status: "Ativo",
+    messageCount: 95,
+    lastConversation: "Hoje, 09:15",
+    plansGeneratedMonth: 55,
+    history24h: MOCK_HISTORY_1,
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "24",
+    name: "Tatiana Azevedo",
+    whatsapp: "+55 71 99667-7889",
+    status: "Ativo",
+    messageCount: 102,
+    lastConversation: "Hoje, 11:40",
+    plansGeneratedMonth: 61,
+    history24h: MOCK_HISTORY_2,
+    calendarIntegration: { status: "disconnected" },
+  },
+  {
+    id: "25",
+    name: "Vinícius Cardoso",
+    whatsapp: "+55 48 98778-8990",
+    status: "Ativo",
+    messageCount: 88,
+    lastConversation: "Ontem, 17:05",
+    plansGeneratedMonth: 49,
+    history24h: MOCK_HISTORY_1,
+    calendarIntegration: { status: "connected", provider: "google", email: "vinicius.cardoso@ceruti.com.br" },
   },
 ];
 
@@ -147,7 +388,21 @@ export function Dashboard({ onLogout }: DashboardProps) {
   const [newName, setNewName] = useState("");
   const [newDDI, setNewDDI] = useState("+55");
   const [newWhatsapp, setNewWhatsapp] = useState("");
-  const [activeTab, setActiveTab] = useState<'visao-geral' | 'equipe' | 'monitoramento' | 'calendario' | 'crm'>('visao-geral');
+  const [activeTab, setActiveTab] = useState<'visao-geral' | 'equipe' | 'monitoramento' | 'calendario' | 'crm' | 'planos'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('deal') || params.get('tab') === 'crm') return 'crm';
+        if (params.get('tab') === 'planos') return 'planos';
+        if (params.get('tab') === 'monitoramento') return 'monitoramento';
+        if (params.get('tab') === 'calendario') return 'calendario';
+        if (params.get('tab') === 'equipe') return 'equipe';
+      } catch {
+        // ignore
+      }
+    }
+    return 'visao-geral';
+  });
   const [historyModalPerson, setHistoryModalPerson] = useState<Salesperson | null>(null);
   const [openActionDropdownId, setOpenActionDropdownId] = useState<string | null>(null);
   const [editingWhatsappPerson, setEditingWhatsappPerson] = useState<Salesperson | null>(null);
@@ -268,6 +523,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
     { id: 'monitoramento' as const, label: 'Monitoramento', icon: Activity },
     { id: 'calendario' as const, label: 'Calendário', icon: Calendar },
     { id: 'crm' as const, label: 'CRM', icon: Briefcase },
+    { id: 'planos' as const, label: 'Planos', icon: CreditCard },
   ];
 
   return (
@@ -449,9 +705,11 @@ export function Dashboard({ onLogout }: DashboardProps) {
                 : activeTab === 'equipe'
                 ? 'Gestão de Acessos'
                 : activeTab === 'monitoramento'
-                ? 'Monitoramento Individual dos Vendedores'
+                ? 'Monitoramento Individual dos Colaboradores'
                 : activeTab === 'calendario'
                 ? 'Integração de Calendário'
+                : activeTab === 'planos'
+                ? 'Planos e Assinatura'
                 : 'Gestão de CRM e Pipeline Agro'}
             </h1>
           </div>
@@ -463,7 +721,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                 className="px-3 sm:px-4 py-2 bg-[#00a83e] text-white rounded-lg text-sm font-semibold shadow-md shadow-emerald-500/20 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-0.5 disabled:bg-slate-300 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex items-center space-x-1 sm:space-x-2"
               >
                 <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Adicionar Vendedor</span>
+                <span className="hidden sm:inline">Adicionar Colaborador</span>
                 <span className="inline sm:hidden">Adicionar</span>
               </button>
             )}
@@ -504,6 +762,12 @@ export function Dashboard({ onLogout }: DashboardProps) {
             className={`flex-1 min-w-[70px] py-3 text-xs sm:text-sm font-semibold text-center border-b-2 ${activeTab === 'crm' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
           >
             CRM
+          </button>
+          <button 
+            onClick={() => setActiveTab('planos')}
+            className={`flex-1 min-w-[70px] py-3 text-xs sm:text-sm font-semibold text-center border-b-2 ${activeTab === 'planos' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
+          >
+            Planos
           </button>
         </div>
 
@@ -546,7 +810,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                         <span className="text-lg sm:text-xl font-bold text-slate-400 ml-1">/ {MOCK_PLAN.maxAccesses}</span>
                       </h3>
                       <span className="text-sm font-semibold text-slate-600">
-                        vendedores ativos
+                        colaboradores ativos
                       </span>
                     </div>
                   </div>
@@ -565,7 +829,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
               <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col flex-1 overflow-visible min-h-0">
                 <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/50 shrink-0">
                   <div className="flex items-center space-x-2.5">
-                    <h4 className="font-bold text-slate-900 text-base">Vendedores Cadastrados</h4>
+                    <h4 className="font-bold text-slate-900 text-base">Colaboradores Cadastrados</h4>
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-[#00a83e] border border-emerald-200/60">
                       {filteredSalespeople.length}
                       {searchQuery.trim() && (
@@ -574,7 +838,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                     </span>
                   </div>
 
-                  {/* Lupa de busca por vendedor */}
+                  {/* Lupa de busca por colaborador */}
                   <div className="flex items-center space-x-3 w-full sm:w-auto">
                     <div className="relative w-full sm:w-72">
                       <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -582,7 +846,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Buscar por vendedor ou telefone..."
+                        placeholder="Buscar por colaborador ou telefone..."
                         className="w-full pl-9 pr-8 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00a83e] focus:border-transparent text-slate-900 placeholder:text-slate-400 transition-all shadow-xs"
                       />
                       {searchQuery && (
@@ -604,7 +868,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                   <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead className="bg-gray-50 text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b border-slate-100 sticky top-0 z-10">
                       <tr>
-                        <th className="px-5 sm:px-6 py-3.5 whitespace-nowrap">Vendedor</th>
+                        <th className="px-5 sm:px-6 py-3.5 whitespace-nowrap">Colaborador</th>
                         <th className="px-5 sm:px-6 py-3.5 whitespace-nowrap">WhatsApp</th>
                         <th className="px-5 sm:px-6 py-3.5 whitespace-nowrap">Último Uso</th>
                         <th className="px-5 sm:px-6 py-3.5 text-right whitespace-nowrap">Ações</th>
@@ -619,7 +883,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                                 <div className="flex flex-col items-center justify-center space-y-2">
                                   <Search className="w-8 h-8 text-slate-300" />
                                   <p className="text-slate-700 font-medium">
-                                    Nenhum vendedor encontrado para "{searchQuery}"
+                                    Nenhum colaborador encontrado para "{searchQuery}"
                                   </p>
                                   <button
                                     type="button"
@@ -630,7 +894,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                                   </button>
                                 </div>
                               ) : (
-                                "Nenhum vendedor cadastrado no momento."
+                                "Nenhum colaborador cadastrado no momento."
                               )}
                             </td>
                           </tr>
@@ -646,7 +910,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                               transition={{ duration: 0.2, delay: index * 0.04 }}
                               className="hover:bg-emerald-50/40 transition-colors group cursor-default"
                             >
-                              {/* 1. VENDEDOR */}
+                              {/* 1. COLABORADOR */}
                               <td className="px-5 sm:px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center space-x-3">
                                   <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 shrink-0 shadow-xs group-hover:border-emerald-300 group-hover:bg-emerald-50 transition-colors">
@@ -701,8 +965,8 @@ export function Dashboard({ onLogout }: DashboardProps) {
                                         ? "bg-slate-200 text-slate-900 shadow-xs"
                                         : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"
                                     }`}
-                                    title="Opções do vendedor"
-                                    aria-label="Ações do vendedor"
+                                    title="Opções do colaborador"
+                                    aria-label="Ações do colaborador"
                                   >
                                     <MoreVertical className="w-4 h-4" />
                                   </button>
@@ -752,7 +1016,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                                             className="w-full px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center space-x-2.5 transition-colors group"
                                           >
                                             <Trash2 className="w-3.5 h-3.5 text-red-500 group-hover:scale-110 transition-transform" />
-                                            <span>Excluir vendedor</span>
+                                            <span>Excluir colaborador</span>
                                           </button>
                                         </motion.div>
                                       </>
@@ -784,11 +1048,33 @@ export function Dashboard({ onLogout }: DashboardProps) {
                 );
               }}
             />
+          ) : activeTab === 'planos' ? (
+            <PlansView currentCollaboratorCount={salespeople.length} />
           ) : (
-            <CRMView />
+            <CRMView salespeople={salespeople} />
           )}
+
+          {/* Versão (1.0.0) no centro inferior do dashboard */}
+          <div className="pt-6 pb-2 text-center text-xs font-medium text-slate-400 select-none">
+            Versão (1.0.0)
+          </div>
         </div>
       </main>
+
+      {/* Botão Flutuante de WhatsApp (67 99819-0294) com mensagem 'Olá, tenho uma dúvida!' */}
+      <div className="fixed bottom-5 right-5 z-40 flex items-center group">
+        <a
+          href="https://api.whatsapp.com/send?phone=5567998190294&text=Ol%C3%A1%2C%20tenho%20uma%20d%C3%BAvida%21"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center space-x-2 bg-[#25D366] hover:bg-[#20ba5a] text-white px-4 py-3 rounded-full shadow-lg shadow-emerald-600/30 hover:shadow-xl hover:shadow-emerald-600/40 hover:-translate-y-0.5 transition-all duration-200 active:scale-95 font-semibold text-sm"
+          title="Falar no WhatsApp: (67) 99819-0294"
+          aria-label="Falar no WhatsApp com suporte Ceruti"
+        >
+          <MessageCircle className="w-5 h-5 fill-current" />
+          <span className="hidden sm:inline">Suporte Ceruti</span>
+        </a>
+      </div>
 
       {/* Add Modal */}
       <AnimatePresence>
@@ -820,7 +1106,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                      Nome do Vendedor
+                      Nome do Colaborador
                     </label>
                     <input
                       type="text"
@@ -1086,7 +1372,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
               <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
                 <Trash2 className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">Excluir Vendedor</h3>
+              <h3 className="text-lg font-bold text-slate-900">Excluir Colaborador</h3>
               <p className="text-xs sm:text-sm text-slate-500 mt-2">
                 Tem certeza que deseja remover o acesso de <strong className="text-slate-800">{deletingPerson.name}</strong> ({deletingPerson.whatsapp})?
               </p>

@@ -213,7 +213,7 @@ export const CRMNewDealModal: React.FC<CRMNewDealModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block font-bold text-slate-700 uppercase mb-1 text-[10px]">
-                Vendedor Responsável
+                Colaborador Responsável
               </label>
               <select
                 value={salespersonName}

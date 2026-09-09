@@ -244,7 +244,7 @@ export function CalendarView({
               Agendamentos pelo WhatsApp
             </span>
             <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-              O bot Ceruti consulta horários livres e reserva reuniões diretamente na agenda do vendedor.
+              O bot Ceruti consulta horários livres e reserva reuniões diretamente na agenda do colaborador.
             </p>
           </div>
         </motion.div>
@@ -257,7 +257,7 @@ export function CalendarView({
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
               <CalendarClock className="w-5 h-5 text-[#00a83e]" />
-              <span>Vendedores e Integração de Calendário</span>
+              <span>Colaboradores e Integração de Calendário</span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Habilite a sincronização da agenda para cada membro cadastrado no painel
@@ -270,7 +270,7 @@ export function CalendarView({
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Buscar vendedor..."
+                placeholder="Buscar colaborador..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full sm:w-56 pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00a83e]/30 focus:border-[#00a83e]"
@@ -320,7 +320,7 @@ export function CalendarView({
         {filteredList.length === 0 ? (
           <div className="py-12 text-center">
             <CalendarIcon className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-slate-700">Nenhum vendedor encontrado</p>
+            <p className="text-sm font-semibold text-slate-700">Nenhum colaborador encontrado</p>
             <p className="text-xs text-slate-400 mt-1">Tente ajustar os termos da busca ou os filtros acima.</p>
           </div>
         ) : (
@@ -449,7 +449,7 @@ export function CalendarView({
                             ? "bg-slate-900 text-white hover:bg-slate-800 shadow-md"
                             : "bg-[#00a83e] hover:bg-emerald-700 text-white shadow-emerald-500/20 hover:shadow-md hover:shadow-emerald-500/30"
                         }`}
-                        title="Visualizar agenda de compromissos deste vendedor"
+                        title="Visualizar agenda de compromissos deste colaborador"
                       >
                         <CalendarIcon className="w-3.5 h-3.5" />
                         <span>{isExpanded ? "Ocultar agenda" : "Ver agenda"}</span>
@@ -506,7 +506,7 @@ export function CalendarView({
                     <span>Integrar ao Calendário</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Vendedor: <span className="font-bold text-slate-800">{selectedPersonForModal.name}</span>
+                    Colaborador: <span className="font-bold text-slate-800">{selectedPersonForModal.name}</span>
                   </p>
                 </div>
                 <button
@@ -571,14 +571,14 @@ export function CalendarView({
                 {/* E-mail da Conta de Calendário */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    E-mail da Agenda do Vendedor
+                    E-mail da Agenda do Colaborador
                   </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="email"
                       required
-                      placeholder="ex: vendedor@empresa.com.br"
+                      placeholder="ex: colaborador@empresa.com.br"
                       value={calendarEmail}
                       onChange={(e) => setCalendarEmail(e.target.value)}
                       className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00a83e]/30 focus:border-[#00a83e]"

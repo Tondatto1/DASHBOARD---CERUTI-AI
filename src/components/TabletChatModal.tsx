@@ -57,11 +57,20 @@ export function TabletChatModal({
   const filteredSessions = useMemo(() => {
     return sessions.filter((s) => {
       const matchDate = selectedDateFilter === 'todas' || s.date === selectedDateFilter;
+      const firstMessageTime = s.messages[0]?.timestamp || s.time;
+      const [year, month, day] = s.date.split('-');
+      const formattedDate = `${day}/${month}/${year}`;
+      const q = searchQuery.toLowerCase().trim();
+      
       const matchQuery =
-        searchQuery.trim() === '' ||
-        s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.objection.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.clientContext.toLowerCase().includes(searchQuery.toLowerCase());
+        !q ||
+        s.date.includes(q) ||
+        s.dateLabel.toLowerCase().includes(q) ||
+        formattedDate.includes(q) ||
+        firstMessageTime.includes(q) ||
+        s.title.toLowerCase().includes(q) ||
+        s.objection.toLowerCase().includes(q) ||
+        s.messages.some((m) => m.text.toLowerCase().includes(q));
       return matchDate && matchQuery;
     });
   }, [sessions, selectedDateFilter, searchQuery]);
@@ -140,12 +149,14 @@ export function TabletChatModal({
                 <div>
                   <div className="flex items-center space-x-2">
                     <h3 className="text-sm font-bold tracking-tight text-white">
-                      Histórico Ampliado de Conversas & Planos
+                      Histórico de conversas de {salesperson.name}
                     </h3>
                   </div>
-                  <p className="text-[11px] text-slate-400">
-                    Registros completos das consultas de <strong className="text-slate-200">{salesperson.name}</strong> com a IA Ceruti
-                  </p>
+                  <div className="mt-1">
+                    <span className="inline-flex items-center text-[11px] font-bold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-md border border-emerald-500/40 shadow-2xs">
+                      Registro completo dos últimos 30 dias
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -223,7 +234,7 @@ export function TabletChatModal({
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Buscar por cliente ou objeção..."
+                      placeholder="Buscar por data ou mensagem..."
                       className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-[#00a83e] focus:border-transparent outline-none shadow-2xs"
                     />
                     {searchQuery && (
@@ -249,41 +260,51 @@ export function TabletChatModal({
                   ) : (
                     filteredSessions.map((session) => {
                       const isSelected = currentSession?.id === session.id;
+                      const firstMessageTime = session.messages[0]?.timestamp || session.time;
+                      const [year, month, day] = session.date.split('-');
+                      const formattedDate = `${day}/${month}/${year}`;
+
                       return (
                         <button
                           key={session.id}
                           type="button"
                           onClick={() => setSelectedSessionId(session.id)}
-                          className={`w-full text-left p-3 rounded-xl transition-all border cursor-pointer ${
+                          className={`w-full text-left p-3.5 rounded-2xl transition-all border cursor-pointer ${
                             isSelected
-                              ? 'bg-white border-[#00a83e] shadow-sm shadow-emerald-500/10 ring-1 ring-[#00a83e]'
-                              : 'bg-white/70 border-slate-200/80 hover:bg-white hover:border-slate-300'
+                              ? 'bg-white border-[#00a83e] shadow-sm shadow-emerald-500/10 ring-1.5 ring-[#00a83e]'
+                              : 'bg-white/80 border-slate-200 hover:bg-white hover:border-slate-300'
                           }`}
                         >
-                          <div className="flex items-center justify-between gap-1 mb-1">
-                            <span className="text-[10px] font-bold text-slate-400 flex items-center space-x-1">
-                              <Clock className="w-2.5 h-2.5 text-slate-400" />
-                              <span>{session.time} • {session.date.split('-').slice(1).reverse().join('/')}</span>
-                            </span>
-                            {session.plansGenerated > 0 && (
-                              <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
-                                <Sparkles className="w-2.5 h-2.5 text-amber-600" />
-                                <span>{session.plansGenerated} Plano</span>
-                              </span>
-                            )}
-                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center space-x-2.5 min-w-0">
+                              <div
+                                className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                                  isSelected
+                                    ? 'bg-[#00a83e] text-white shadow-2xs'
+                                    : 'bg-slate-100 text-slate-500'
+                                }`}
+                              >
+                                <Clock className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <span
+                                  className={`text-xs block font-bold leading-tight truncate ${
+                                    isSelected ? 'text-[#00a83e]' : 'text-slate-900'
+                                  }`}
+                                >
+                                  {formattedDate} às {firstMessageTime}
+                                </span>
+                                <span className="text-[11px] text-slate-400 font-medium block truncate mt-0.5">
+                                  {session.dateLabel}
+                                </span>
+                              </div>
+                            </div>
 
-                          <h5 className="text-xs font-bold text-slate-900 leading-snug line-clamp-1">
-                            {session.title}
-                          </h5>
-
-                          <div className="mt-1.5 flex items-center justify-between gap-2">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 truncate max-w-[170px]">
-                              {session.objection}
-                            </span>
-                            <span className="text-[10px] font-semibold text-slate-400 shrink-0">
-                              {session.messages.length} msgs
-                            </span>
+                            <ChevronRight
+                              className={`w-4 h-4 shrink-0 transition-transform ${
+                                isSelected ? 'text-[#00a83e] translate-x-0.5' : 'text-slate-300'
+                              }`}
+                            />
                           </div>
                         </button>
                       );

@@ -15,9 +15,11 @@ import {
   Tag as TagIcon,
   Plus,
   Check,
+  Share2,
 } from "lucide-react";
-import { CRMDeal, CRMColumn, CRMTag, CRMStage } from "../../types";
+import { CRMDeal, CRMColumn, CRMTag, CRMStage, Salesperson } from "../../types";
 import { formatBRL } from "../../data/crmData";
+import { copyDealShareLink } from "../../utils/crmShare";
 
 interface CRMDealDetailModalProps {
   deal: CRMDeal | null;
@@ -31,6 +33,8 @@ interface CRMDealDetailModalProps {
   onSetStage: (dealId: string, stage: CRMStage) => void;
   onShowToast: (msg: string) => void;
   salespeopleList: string[];
+  salespeople?: Salesperson[];
+  onOpenShareModal?: (deal: CRMDeal) => void;
 }
 
 export const CRMDealDetailModal: React.FC<CRMDealDetailModalProps> = ({
@@ -45,6 +49,8 @@ export const CRMDealDetailModal: React.FC<CRMDealDetailModalProps> = ({
   onSetStage,
   onShowToast,
   salespeopleList,
+  salespeople,
+  onOpenShareModal,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -162,7 +168,7 @@ export const CRMDealDetailModal: React.FC<CRMDealDetailModalProps> = ({
       >
         {/* Header do Modal */}
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <div className="pr-2">
+          <div>
             <div className="flex items-center space-x-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-md">
                 {isEditing ? "Modo de Edição" : deal.productCategory}
@@ -176,48 +182,6 @@ export const CRMDealDetailModal: React.FC<CRMDealDetailModalProps> = ({
             <h3 className="text-base sm:text-lg font-black text-slate-900 mt-1 truncate max-w-md">
               {isEditing ? "Editar Informações da Oportunidade" : deal.title}
             </h3>
-          </div>
-
-          <div className="flex items-center space-x-1.5 shrink-0">
-            {!isEditing ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(true)}
-                  className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-[#00a83e] rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer"
-                  title="Editar dados"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                  <span>Editar</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDeleteDeal(deal.id)}
-                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
-                  title="Excluir Oportunidade"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
-              >
-                Cancelar Edição
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                setIsEditing(false);
-              }}
-              className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
           </div>
         </div>
 
@@ -330,7 +294,7 @@ export const CRMDealDetailModal: React.FC<CRMDealDetailModalProps> = ({
                 <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100">
                   <span className="text-[10px] text-slate-400 uppercase font-bold block flex items-center space-x-1">
                     <UserCheck className="w-3 h-3 text-slate-400" />
-                    <span>Consultor / Vendedor</span>
+                    <span>Consultor / Colaborador</span>
                   </span>
                   <span className="font-bold text-slate-800 text-xs mt-1 block">
                     {deal.salespersonName}
@@ -408,23 +372,37 @@ export const CRMDealDetailModal: React.FC<CRMDealDetailModalProps> = ({
               </div>
 
               {/* Rodapé Visualização */}
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onShowToast(`Iniciando contato via WhatsApp com ${deal.clientName}`);
-                  }}
-                  className="py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-[#00a83e] font-bold rounded-xl transition-colors flex items-center space-x-2 cursor-pointer active:scale-95"
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>Falar no WhatsApp</span>
-                </button>
-
+              <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
                 <div className="flex items-center space-x-2">
                   <button
                     type="button"
+                    onClick={() => {
+                      if (onOpenShareModal) onOpenShareModal(deal);
+                      else copyDealShareLink(deal, onShowToast);
+                    }}
+                    className="py-2.5 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors flex items-center space-x-1.5 cursor-pointer active:scale-95"
+                    title="Compartilhar link deste card"
+                  >
+                    <Share2 className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Compartilhar</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onDeleteDeal(deal.id)}
+                    className="py-2.5 px-3.5 text-rose-600 hover:bg-rose-50 border border-rose-200 hover:border-rose-300 font-bold rounded-xl transition-colors flex items-center space-x-1.5 cursor-pointer active:scale-95"
+                    title="Excluir Oportunidade"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                    <span>Excluir</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center space-x-2 justify-end">
+                  <button
+                    type="button"
                     onClick={() => setIsEditing(true)}
-                    className="py-2.5 px-4 bg-[#00a83e] hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors flex items-center space-x-1.5 cursor-pointer active:scale-95 shadow-xs"
+                    className="py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-[#00a83e] font-bold rounded-xl transition-colors flex items-center space-x-1.5 cursor-pointer active:scale-95"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                     <span>Editar Oportunidade</span>

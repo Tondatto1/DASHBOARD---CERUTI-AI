@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Users,
@@ -24,7 +24,9 @@ import {
   AlertTriangle,
   Lightbulb,
   Award,
-  ChevronDown
+  ChevronDown,
+  Phone,
+  Check
 } from 'lucide-react';
 import { Salesperson, UsagePoint, ObjectionData, ConversationSession } from '../types';
 import { enrichSalespersonWithMonitoring } from '../data/monitoringData';
@@ -44,6 +46,42 @@ export function Monitoring({ salespeople }: MonitoringProps) {
   const [selectedSalespersonId, setSelectedSalespersonId] = useState<string>(
     enrichedSalespeople[0]?.id || '1'
   );
+
+  // Estados para o Seletor Moderno de Vendedor com Busca (Lupa)
+  const [isSellerDropdownOpen, setIsSellerDropdownOpen] = useState<boolean>(false);
+  const [sellerSearchTerm, setSellerSearchTerm] = useState<string>('');
+  const sellerDropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Fechar seletor ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (sellerDropdownRef.current && !sellerDropdownRef.current.contains(event.target as Node)) {
+        setIsSellerDropdownOpen(false);
+      }
+    }
+    if (isSellerDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      // Focar automaticamente no campo de pesquisa
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSellerDropdownOpen]);
+
+  // Lista de vendedores filtrados pela barra de busca
+  const filteredSalespeople = useMemo(() => {
+    const q = sellerSearchTerm.toLowerCase().trim();
+    if (!q) return enrichedSalespeople;
+    return enrichedSalespeople.filter(
+      (person) =>
+        person.name.toLowerCase().includes(q) ||
+        person.whatsapp.toLowerCase().includes(q)
+    );
+  }, [enrichedSalespeople, sellerSearchTerm]);
 
   const currentSalesperson = useMemo(() => {
     return (
@@ -110,8 +148,25 @@ export function Monitoring({ salespeople }: MonitoringProps) {
   const [isTabletModalOpen, setIsTabletModalOpen] = useState<boolean>(false);
   const [targetSessionId, setTargetSessionId] = useState<string | undefined>(undefined);
 
-  // Estado para aba de visualização do mapa de objeções (todas vs severidade)
-  const [selectedObjectionCategory, setSelectedObjectionCategory] = useState<string>('todas');
+  // Estado para filtro de severidade no mapa de objeções (Todas, Alta, Média, Baixa)
+  const [objectionSeverityFilter, setObjectionSeverityFilter] = useState<'all' | 'alta' | 'media' | 'baixa'>('all');
+
+  // Contadores e lista filtrada de objeções por severidade
+  const severityCounts = useMemo(() => {
+    const list = currentSalesperson.objections || [];
+    return {
+      all: list.length,
+      alta: list.filter((o) => o.severity === 'alta').length,
+      media: list.filter((o) => o.severity === 'media').length,
+      baixa: list.filter((o) => o.severity === 'baixa').length,
+    };
+  }, [currentSalesperson.objections]);
+
+  const filteredObjections = useMemo(() => {
+    const list = currentSalesperson.objections || [];
+    if (objectionSeverityFilter === 'all') return list;
+    return list.filter((o) => o.severity === objectionSeverityFilter);
+  }, [currentSalesperson.objections, objectionSeverityFilter]);
 
   // Filtrar os pontos de dados da linha do tempo conforme o período selecionado
   const timelineData = useMemo(() => {
@@ -209,38 +264,170 @@ export function Monitoring({ salespeople }: MonitoringProps) {
         variants={itemVariants}
         className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
       >
-        {/* Lado Esquerdo: Identificação do Vendedor e Switcher */}
+        {/* Lado Esquerdo: Identificação do Colaborador e Switcher Moderno */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3.5">
-          <div>
+          <div className="relative" ref={sellerDropdownRef}>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-              Vendedor em Análise Individual:
+              Colaborador em Análise Individual:
             </span>
+            
             <div className="flex items-center space-x-2">
-              <div className="relative">
-                <select
-                  value={selectedSalespersonId}
-                  onChange={(e) => setSelectedSalespersonId(e.target.value)}
-                  className="pl-3.5 pr-9 py-2 bg-slate-50 border border-slate-200 hover:border-[#00a83e] focus:border-[#00a83e] focus:ring-2 focus:ring-[#00a83e]/20 rounded-xl text-sm font-bold text-slate-900 outline-none transition-all cursor-pointer shadow-2xs appearance-none"
-                >
-                  {enrichedSalespeople.map((person) => (
-                    <option key={person.id} value={person.id}>
-                      {person.name} ({person.whatsapp})
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+              {/* Botão Gatilho Moderno */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSellerDropdownOpen(!isSellerDropdownOpen);
+                  setSellerSearchTerm('');
+                }}
+                className={`min-w-[270px] sm:min-w-[310px] px-3.5 py-2 bg-slate-50 hover:bg-white border rounded-2xl flex items-center justify-between gap-3 text-left transition-all shadow-2xs group cursor-pointer ${
+                  isSellerDropdownOpen
+                    ? 'border-[#00a83e] ring-2 ring-[#00a83e]/15 bg-white'
+                    : 'border-slate-200 hover:border-[#00a83e]/70'
+                }`}
+              >
+                <div className="flex items-center space-x-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#00a83e] to-emerald-700 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                    {currentSalesperson.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-sm font-bold text-slate-900 group-hover:text-[#00a83e] transition-colors truncate block">
+                      {currentSalesperson.name}
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-mono block truncate">
+                      {currentSalesperson.whatsapp}
+                    </span>
+                  </div>
+                </div>
 
-              <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-[#00a83e] border border-emerald-200/70 text-xs font-bold">
+                <div className="flex items-center space-x-1.5 shrink-0">
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-200 ${
+                      isSellerDropdownOpen ? 'rotate-180 text-[#00a83e]' : 'text-slate-400 group-hover:text-slate-600'
+                    }`}
+                  />
+                </div>
+              </button>
+
+              <div className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 text-[#00a83e] border border-emerald-200/70 text-xs font-bold shrink-0">
                 <span className="w-2 h-2 rounded-full bg-[#00a83e] animate-pulse" />
                 <span>{currentSalesperson.status}</span>
               </div>
             </div>
+
+            {/* Menu Popover Flutuante com Lupa de Pesquisa */}
+            <AnimatePresence>
+              {isSellerDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
+                  className="absolute top-full left-0 mt-2 z-50 w-full sm:w-[360px] bg-white rounded-2xl shadow-2xl border border-slate-200 p-2.5 flex flex-col overflow-hidden"
+                >
+                  {/* Campo de Pesquisa com Lupa */}
+                  <div className="relative mb-2">
+                    <Search className="w-4 h-4 text-[#00a83e] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={sellerSearchTerm}
+                      onChange={(e) => setSellerSearchTerm(e.target.value)}
+                      placeholder="Pesquisar por nome ou telefone..."
+                      className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00a83e]/20 focus:border-[#00a83e] focus:bg-white transition-all"
+                    />
+                    {sellerSearchTerm && (
+                      <button
+                        type="button"
+                        onClick={() => setSellerSearchTerm('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Cabeçalho informativo */}
+                  <div className="px-2 py-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-1.5 mb-1">
+                    <span>Equipe</span>
+                    <span className="text-slate-500 font-semibold">
+                      {filteredSalespeople.length} {filteredSalespeople.length === 1 ? 'colaborador' : 'colaboradores'}
+                    </span>
+                  </div>
+
+                  {/* Lista com Rolagem Suave */}
+                  <div className="max-h-64 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                    {filteredSalespeople.map((person) => {
+                      const isSelected = person.id === selectedSalespersonId;
+                      return (
+                        <button
+                          key={person.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedSalespersonId(person.id);
+                            setIsSellerDropdownOpen(false);
+                          }}
+                          className={`w-full p-2.5 rounded-xl flex items-center justify-between gap-2.5 text-left transition-all ${
+                            isSelected
+                              ? 'bg-emerald-50 text-[#00a83e] border border-emerald-200/80 font-bold shadow-2xs'
+                              : 'hover:bg-slate-50 text-slate-700 border border-transparent'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2.5 min-w-0">
+                            <div
+                              className={`w-7 h-7 rounded-lg font-black text-xs flex items-center justify-center shrink-0 shadow-2xs ${
+                                isSelected
+                                  ? 'bg-[#00a83e] text-white'
+                                  : 'bg-slate-100 text-slate-700'
+                              }`}
+                            >
+                              {person.name.charAt(0)}
+                            </div>
+                            <div className="min-w-0">
+                              <span
+                                className={`text-xs block truncate ${
+                                  isSelected ? 'font-black text-[#00a83e]' : 'font-bold text-slate-800'
+                                }`}
+                              >
+                                {person.name}
+                              </span>
+                              <span className="text-[11px] text-slate-400 font-mono block truncate">
+                                {person.whatsapp}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-1.5 shrink-0">
+                            {person.plansGeneratedMonth !== undefined && person.plansGeneratedMonth > 0 && (
+                              <span className="hidden sm:inline-block text-[10px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">
+                                {person.plansGeneratedMonth} planos
+                              </span>
+                            )}
+                            {isSelected && (
+                              <Check className="w-4 h-4 text-[#00a83e] shrink-0" />
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+
+                    {filteredSalespeople.length === 0 && (
+                      <div className="py-6 text-center text-xs text-slate-400 font-medium">
+                        <Search className="w-6 h-6 text-slate-300 mx-auto mb-1.5" />
+                        <p className="text-slate-600 font-bold">Nenhum colaborador encontrado</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          Não encontramos resultados para "{sellerSearchTerm}"
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="h-8 w-px bg-slate-200 hidden sm:block mx-1" />
 
-          {/* Resumo Rápido do Vendedor */}
+          {/* Resumo Rápido do Colaborador */}
           <div className="flex items-center gap-3 text-xs text-slate-600">
             <div>
               <span className="text-slate-400 block text-[10px] uppercase font-bold">Última Conversa</span>
@@ -254,15 +441,12 @@ export function Monitoring({ salespeople }: MonitoringProps) {
           <button
             type="button"
             onClick={() => handleOpenTablet()}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 text-white font-bold text-xs flex items-center justify-center space-x-2.5 shadow-md shadow-slate-900/10 hover:shadow-lg transition-all cursor-pointer group"
+            className="w-full sm:w-auto px-4 py-3 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 text-white font-bold text-sm sm:text-base flex items-center justify-center space-x-2.5 shadow-md shadow-slate-900/10 hover:shadow-lg transition-all cursor-pointer group"
           >
-            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
-              <Tablet className="w-3.5 h-3.5" />
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform shrink-0">
+              <Tablet className="w-4 h-4" />
             </div>
-            <div className="text-left">
-              <span className="block leading-none">Abrir Histórico em Tablet</span>
-              <span className="text-[10px] font-normal text-slate-300">Tela ampliada e diálogos completos</span>
-            </div>
+            <span className="leading-tight font-bold">Abrir histórico de conversas</span>
           </button>
         </div>
       </motion.div>
@@ -396,7 +580,7 @@ export function Monitoring({ salespeople }: MonitoringProps) {
                   Atividade no Período
                 </h4>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Escolha quantos dias deseja ver para entender a rotina de uso do vendedor
+                  Escolha quantos dias deseja ver para entender a rotina de uso do colaborador
                 </p>
               </div>
 
@@ -522,7 +706,7 @@ export function Monitoring({ salespeople }: MonitoringProps) {
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span className="text-slate-400 font-medium">Resumo do vendedor</span>
+            <span className="text-slate-400 font-medium">Resumo do colaborador</span>
             <span className="font-bold text-slate-700">Mostrando os últimos {timelineData.length} dias de uso</span>
           </div>
         </motion.div>
@@ -531,73 +715,218 @@ export function Monitoring({ salespeople }: MonitoringProps) {
       {/* ================= DOBRA 2: MAPA DE OBJEÇÕES ================= */}
       <div className="w-full">
 
-        {/* KPI 2: MAPA DE OBJEÇÕES (QUAIS AS OBJEÇÕES OS VENDEDORES ESTÃO TRAZENDO?) */}
+        {/* KPI 2: MAPA DE OBJEÇÕES (QUAIS AS OBJEÇÕES OS COLABORADORES ESTÃO TRAZENDO?) */}
         <motion.div
           variants={itemVariants}
           className="w-full bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:scale-105 hover:shadow-xl relative hover:z-10 transition-all duration-300 p-6 flex flex-col justify-between cursor-default"
         >
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-slate-100 pb-4">
-              <div className="flex items-center space-x-2">
-                <ShieldAlert className="w-4 h-4 text-amber-500" />
-                <h3 className="font-bold text-slate-900 text-base">
-                  Mapa de Objeções Trazidas pelo Vendedor
-                </h3>
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-6 border-b border-slate-100 pb-4">
+              <div className="flex items-center space-x-2.5">
+                <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">
+                    Mapa de Objeções Trazidas pelo Colaborador
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Filtre por nível de severidade para identificar pontos críticos
+                  </p>
+                </div>
               </div>
 
-              <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shrink-0">
-                {currentSalesperson.objections?.length || 4} Categorias Mapeadas
-              </span>
+              {/* 3 Filtros de Severidade (Alta, Média, Baixa) + Todas */}
+              <div className="flex items-center flex-wrap gap-1.5 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
+                <button
+                  type="button"
+                  onClick={() => setObjectionSeverityFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                    objectionSeverityFilter === 'all'
+                      ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  }`}
+                  title="Ver todas as categorias de objeções"
+                >
+                  <span>Todas</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${
+                      objectionSeverityFilter === 'all'
+                        ? 'bg-slate-100 text-slate-700'
+                        : 'bg-slate-200/70 text-slate-500'
+                    }`}
+                  >
+                    {severityCounts.all}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setObjectionSeverityFilter(
+                      objectionSeverityFilter === 'alta' ? 'all' : 'alta'
+                    )
+                  }
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                    objectionSeverityFilter === 'alta'
+                      ? 'bg-rose-600 text-white shadow-xs'
+                      : 'text-rose-700 hover:bg-rose-50'
+                  }`}
+                  title="Filtrar por Severidade Alta"
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      objectionSeverityFilter === 'alta' ? 'bg-white' : 'bg-rose-500'
+                    }`}
+                  />
+                  <span>Alta</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${
+                      objectionSeverityFilter === 'alta'
+                        ? 'bg-rose-700 text-white'
+                        : 'bg-rose-100 text-rose-700'
+                    }`}
+                  >
+                    {severityCounts.alta}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setObjectionSeverityFilter(
+                      objectionSeverityFilter === 'media' ? 'all' : 'media'
+                    )
+                  }
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                    objectionSeverityFilter === 'media'
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'text-amber-800 hover:bg-amber-50'
+                  }`}
+                  title="Filtrar por Severidade Média"
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      objectionSeverityFilter === 'media' ? 'bg-white' : 'bg-amber-500'
+                    }`}
+                  />
+                  <span>Média</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${
+                      objectionSeverityFilter === 'media'
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}
+                  >
+                    {severityCounts.media}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setObjectionSeverityFilter(
+                      objectionSeverityFilter === 'baixa' ? 'all' : 'baixa'
+                    )
+                  }
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                    objectionSeverityFilter === 'baixa'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-blue-700 hover:bg-blue-50'
+                  }`}
+                  title="Filtrar por Severidade Baixa"
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      objectionSeverityFilter === 'baixa' ? 'bg-white' : 'bg-blue-500'
+                    }`}
+                  />
+                  <span>Baixa</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${
+                      objectionSeverityFilter === 'baixa'
+                        ? 'bg-blue-700 text-white'
+                        : 'bg-blue-100 text-blue-700'
+                    }`}
+                  >
+                    {severityCounts.baixa}
+                  </span>
+                </button>
+              </div>
             </div>
 
             {/* Lista Visual de Objeções com Barras Didáticas & Melhor Argumento */}
             <div className="space-y-4">
-              {(currentSalesperson.objections || []).map((obj) => {
-                const severityColor =
-                  obj.severity === 'alta'
-                    ? 'bg-rose-50 text-rose-700 border-rose-200'
-                    : obj.severity === 'media'
-                    ? 'bg-amber-50 text-amber-700 border-amber-200'
-                    : 'bg-blue-50 text-blue-700 border-blue-200';
-
-                return (
-                  <div
-                    key={obj.id}
-                    className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-all"
+              {filteredObjections.length === 0 ? (
+                <div className="py-10 px-4 text-center bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                  <ShieldAlert className="w-9 h-9 text-slate-300 mx-auto mb-2" />
+                  <p className="text-sm font-bold text-slate-800">
+                    Nenhuma objeção encontrada com severidade "{objectionSeverityFilter}"
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Não há ocorrências mapeadas para esta classificação no momento.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setObjectionSeverityFilter('all')}
+                    className="mt-3 px-3.5 py-1.5 text-xs font-bold text-[#00a83e] bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 rounded-xl transition-colors"
                   >
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-bold text-slate-900">{obj.category}</span>
-                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md border ${severityColor}`}>
-                          Severidade {obj.severity}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs font-bold text-slate-900">{obj.count} ocorrências</span>
-                        <span className="text-xs font-black text-[#00a83e]">({obj.percentage}%)</span>
-                      </div>
-                    </div>
+                    Ver todas as objeções
+                  </button>
+                </div>
+              ) : (
+                filteredObjections.map((obj) => {
+                  const severityColor =
+                    obj.severity === 'alta'
+                      ? 'bg-rose-50 text-rose-700 border-rose-200'
+                      : obj.severity === 'media'
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-blue-50 text-blue-700 border-blue-200';
 
-                    <p className="text-xs text-slate-600 mb-2.5">
-                      {obj.description}
-                    </p>
+                  const severityLabel =
+                    obj.severity === 'alta'
+                      ? 'SEVERIDADE ALTA'
+                      : obj.severity === 'media'
+                      ? 'SEVERIDADE MÉDIA'
+                      : 'SEVERIDADE BAIXA';
 
-                    {/* Barra de Progresso da Objeção */}
-                    <div className="w-full bg-slate-200/70 h-2 rounded-full overflow-hidden">
-                      <div
-                        style={{ width: `${obj.percentage}%` }}
-                        className="h-full bg-gradient-to-r from-amber-500 to-[#00a83e] rounded-full transition-all duration-500"
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+                  return (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.2 }}
+                      key={obj.id}
+                      className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-all"
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-bold text-slate-900">{obj.category}</span>
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md border ${severityColor}`}>
+                            {severityLabel}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs font-bold text-slate-900">{obj.count} ocorrências</span>
+                          <span className="text-xs font-black text-[#00a83e]">({obj.percentage}%)</span>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-slate-600 mb-2.5">
+                        {obj.description}
+                      </p>
+
+                      {/* Barra de Progresso da Objeção */}
+                      <div className="w-full bg-slate-200/70 h-2 rounded-full overflow-hidden">
+                        <div
+                          style={{ width: `${obj.percentage}%` }}
+                          className="h-full bg-gradient-to-r from-amber-500 to-[#00a83e] rounded-full transition-all duration-500"
+                        />
+                      </div>
+                    </motion.div>
+                  );
+                })
+              )}
             </div>
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Taxa média de superação das objeções: <strong>81%</strong></span>
-            <span className="text-slate-400">Classificação automatizada por NLP</span>
           </div>
         </motion.div>
       </div>

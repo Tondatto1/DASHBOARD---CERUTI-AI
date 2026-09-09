@@ -85,7 +85,7 @@ export const CRMFilterBar: React.FC<CRMFilterBarProps> = ({
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
-            placeholder="Buscar por produtor, fazenda, produto, cidade, tag ou vendedor..."
+            placeholder="Buscar por produtor, fazenda, produto, cidade, tag ou colaborador..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-9 py-2 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200/90 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 transition-all focus:outline-none focus:ring-2 focus:ring-[#00a83e]/20 focus:border-[#00a83e]"

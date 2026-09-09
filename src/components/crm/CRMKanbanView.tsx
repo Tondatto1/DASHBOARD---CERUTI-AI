@@ -13,30 +13,39 @@ import {
   Pencil,
   Trash2,
   Tag as TagIcon,
+  Phone,
+  Share2,
 } from "lucide-react";
-import { CRMDeal, CRMColumn, CRMTag, CRMStage } from "../../types";
+import { CRMDeal, CRMColumn, CRMTag, CRMStage, Salesperson } from "../../types";
 import { formatBRL } from "../../data/crmData";
+import { openDealInWhatsApp, copyDealShareLink } from "../../utils/crmShare";
 
 interface CRMKanbanViewProps {
   columns: CRMColumn[];
   deals: CRMDeal[];
   availableTags: CRMTag[];
+  salespeople?: Salesperson[];
   onOpenDealDetail: (deal: CRMDeal) => void;
   onAdvanceStage: (dealId: string) => void;
   onSetStage: (dealId: string, stage: CRMStage) => void;
   onOpenAddColumnModal: () => void;
   onOpenNewDealModalWithStage?: (stageKey: string) => void;
+  onOpenShareModal?: (deal: CRMDeal) => void;
+  onShowToast?: (msg: string) => void;
 }
 
 export const CRMKanbanView: React.FC<CRMKanbanViewProps> = ({
   columns,
   deals,
   availableTags,
+  salespeople,
   onOpenDealDetail,
   onAdvanceStage,
   onSetStage,
   onOpenAddColumnModal,
   onOpenNewDealModalWithStage,
+  onOpenShareModal,
+  onShowToast,
 }) => {
   const kanbanScrollRef = useRef<HTMLDivElement>(null);
   const [isPanning, setIsPanning] = useState(false);
@@ -396,6 +405,40 @@ export const CRMKanbanView: React.FC<CRMKanbanViewProps> = ({
                                 <ChevronRight className="w-4 h-4" />
                               </button>
                             )}
+                          </div>
+
+                          {/* Ações Rápidas: WhatsApp e Compartilhar */}
+                          <div className="mt-2.5 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-1.5">
+                            <div className="flex items-center space-x-1.5">
+                              <button
+                                type="button"
+                                data-no-pan="true"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openDealInWhatsApp(deal, salespeople, onShowToast);
+                                }}
+                                className="py-1 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-[#00a83e] font-bold text-[11px] rounded-lg transition-colors flex items-center space-x-1 cursor-pointer active:scale-95"
+                                title="Abrir WhatsApp com mensagem pré-definida e link do card"
+                              >
+                                <Phone className="w-3 h-3" />
+                                <span>WhatsApp</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                data-no-pan="true"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (onOpenShareModal) onOpenShareModal(deal);
+                                  else copyDealShareLink(deal, onShowToast);
+                                }}
+                                className="py-1 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-lg transition-colors flex items-center space-x-1 cursor-pointer active:scale-95"
+                                title="Compartilhar link deste card"
+                              >
+                                <Share2 className="w-3 h-3 text-slate-500" />
+                                <span>Compartilhar</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </motion.div>

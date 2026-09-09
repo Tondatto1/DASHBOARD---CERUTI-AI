@@ -51,7 +51,7 @@ export const MOCK_OBJECTIONS_MARIA: ObjectionData[] = [
     count: 31,
     percentage: 39,
     severity: 'alta',
-    bestArgument: 'Demonstração prática de automação com ganho de 12 horas semanais por vendedor.',
+    bestArgument: 'Demonstração prática de automação com ganho de 12 horas semanais por colaborador.',
     successRate: 81,
   },
   {
@@ -190,13 +190,13 @@ export const MOCK_SESSIONS_JOAO: ConversationSession[] = [
       {
         id: 'msg-7',
         sender: 'agent',
-        text: 'João, o software X é genérico e não possui nossa inteligência de recomendação preditiva em tempo real pelo WhatsApp. Foque na velocidade de resposta do vendedor e conversão de orçamentos perdidos.',
+        text: 'João, o software X é genérico e não possui nossa inteligência de recomendação preditiva em tempo real pelo WhatsApp. Foque na velocidade de resposta do colaborador e conversão de orçamentos perdidos.',
         timestamp: '18:41',
       },
       {
         id: 'msg-8',
         sender: 'agent',
-        text: 'Plano de Argumentos: Grupo Vanguarda\n\n1. Comparativo de Entrega: "O software X é um CRM passivo onde sua equipe apenas cadastra dados. A Ceruti é um agente ativo que cria argumentos e fecha pedidos."\n2. Custo do Vendedor Desperdiçado: "Quantas propostas sua equipe perde por falta de argumento na hora certa? Recuperando apenas 2 orçamentos por mês, a diferença de R$ 400 vira lucro puro."\n3. Desafio dos 14 dias: "Faça o teste por 14 dias com 3 vendedores chave. Se não converterem mais que no software X, cancelamos sem custo."',
+        text: 'Plano de Argumentos: Grupo Vanguarda\n\n1. Comparativo de Entrega: "O software X é um CRM passivo onde sua equipe apenas cadastra dados. A Ceruti é um agente ativo que cria argumentos e fecha pedidos."\n2. Custo do Colaborador Desperdiçado: "Quantas propostas sua equipe perde por falta de argumento na hora certa? Recuperando apenas 2 orçamentos por mês, a diferença de R$ 400 vira lucro puro."\n3. Desafio dos 14 dias: "Faça o teste por 14 dias com 3 colaboradores chave. Se não converterem mais que no software X, cancelamos sem custo."',
         timestamp: '18:43',
         isPlan: true,
         planTitle: 'Plano de Argumentos: Vanguarda • Ativo vs. Passivo',
@@ -380,7 +380,7 @@ export const MOCK_SESSIONS_CARLOS: ConversationSession[] = [
       {
         id: 'c-msg-2',
         sender: 'agent',
-        text: 'Apresente como um assistente de vendas dedicado que custa menos que um almoço por dia por vendedor, com teste assistido.',
+        text: 'Apresente como um assistente de vendas dedicado que custa menos que um almoço por dia por colaborador, com teste assistido.',
         timestamp: '11:12',
         isPlan: true,
         planTitle: 'Roteiro de Sensibilização: Comercial Santana',

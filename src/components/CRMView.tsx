@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   TrendingUp,
@@ -10,7 +10,7 @@ import {
   CheckCircle2,
   Share2,
 } from "lucide-react";
-import { CRMDeal, CRMStage, CRMIntegrationConfig, CRMColumn, CRMTag } from "../types";
+import { CRMDeal, CRMStage, CRMIntegrationConfig, CRMColumn, CRMTag, Salesperson } from "../types";
 import {
   DEFAULT_COLUMNS,
   DEFAULT_TAGS,
@@ -27,8 +27,13 @@ import { CRMColumnManagerModal } from "./crm/CRMColumnManagerModal";
 import { CRMDealDetailModal } from "./crm/CRMDealDetailModal";
 import { CRMNewDealModal } from "./crm/CRMNewDealModal";
 import { CRMIntegrationsTab } from "./crm/CRMIntegrationsTab";
+import { CRMShareModal } from "./crm/CRMShareModal";
 
-export function CRMView() {
+interface CRMViewProps {
+  salespeople?: Salesperson[];
+}
+
+export function CRMView({ salespeople }: CRMViewProps) {
   // Main Tab: Pipeline vs Integrations
   const [activeTab, setActiveTab] = useState<"pipeline" | "integrations">("pipeline");
 
@@ -52,10 +57,51 @@ export function CRMView() {
 
   // Modals State
   const [selectedDealForDetail, setSelectedDealForDetail] = useState<CRMDeal | null>(null);
+  const [dealToShare, setDealToShare] = useState<CRMDeal | null>(null);
   const [isNewDealModalOpen, setIsNewDealModalOpen] = useState(false);
   const [newDealDefaultStage, setNewDealDefaultStage] = useState<string | null>(null);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
   const [isColumnManagerOpen, setIsColumnManagerOpen] = useState(false);
+
+  // Abertura automática de card via link direto (?tab=crm&deal=...)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const dealIdFromUrl = params.get("deal");
+      if (dealIdFromUrl) {
+        const found = deals.find((d) => d.id === dealIdFromUrl);
+        if (found) {
+          setSelectedDealForDetail(found);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [deals]);
+
+  // Atualiza query param na URL quando card for aberto/fechado
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const currentParams = new URLSearchParams(window.location.search);
+      if (selectedDealForDetail) {
+        currentParams.set("tab", "crm");
+        currentParams.set("deal", selectedDealForDetail.id);
+        window.history.replaceState(null, "", `?${currentParams.toString()}`);
+      } else if (currentParams.has("deal")) {
+        currentParams.delete("deal");
+        const newSearch = currentParams.toString();
+        window.history.replaceState(
+          null,
+          "",
+          newSearch ? `?${newSearch}` : window.location.pathname
+        );
+      }
+    } catch {
+      // ignore
+    }
+  }, [selectedDealForDetail]);
 
   // Toast Notification
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -529,6 +575,7 @@ export function CRMView() {
               columns={columns}
               deals={filteredDeals}
               availableTags={tags}
+              salespeople={salespeople}
               onOpenDealDetail={(deal) => setSelectedDealForDetail(deal)}
               onAdvanceStage={handleAdvanceStage}
               onSetStage={handleSetStage}
@@ -537,6 +584,8 @@ export function CRMView() {
                 setNewDealDefaultStage(stageKey);
                 setIsNewDealModalOpen(true);
               }}
+              onOpenShareModal={(deal) => setDealToShare(deal)}
+              onShowToast={showToast}
             />
           )}
 
@@ -545,8 +594,10 @@ export function CRMView() {
               deals={filteredDeals}
               columns={columns}
               availableTags={tags}
+              salespeople={salespeople}
               onOpenDealDetail={(deal) => setSelectedDealForDetail(deal)}
               onSetStage={handleSetStage}
+              onOpenShareModal={(deal) => setDealToShare(deal)}
               onShowToast={showToast}
             />
           )}
@@ -586,6 +637,21 @@ export function CRMView() {
             onSetStage={handleSetStage}
             onShowToast={showToast}
             salespeopleList={salespeopleList}
+            salespeople={salespeople}
+            onOpenShareModal={(deal) => setDealToShare(deal)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Modal: Compartilhar Negócio / WhatsApp */}
+      <AnimatePresence>
+        {dealToShare && (
+          <CRMShareModal
+            deal={dealToShare}
+            isOpen={Boolean(dealToShare)}
+            onClose={() => setDealToShare(null)}
+            salespeople={salespeople}
+            onShowToast={showToast}
           />
         )}
       </AnimatePresence>

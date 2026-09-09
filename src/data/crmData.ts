@@ -330,7 +330,7 @@ export const PROVIDER_METADATA: Record<string, ProviderMeta> = {
     tagline: "HubSpot Agro • Funil Ágil & WhatsApp",
     features: [
       "Histórico de Mensagens WhatsApp",
-      "Follow-ups Automáticos de Vendedores",
+      "Follow-ups Automáticos de Colaboradores",
       "Alertas Imediatos de Safra e Plantio",
     ],
     protocol: "Webhooks REST v3 • Push Notifications",
