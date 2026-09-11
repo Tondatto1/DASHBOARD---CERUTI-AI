@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Bot, Lock, Mail } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 import { motion } from "motion/react";
-import Prism from "./Prism";
+import GradientWaves from "./GradientWaves";
 import { Logo } from "./Logo";
 
 interface LoginProps {
@@ -20,18 +20,30 @@ export function Login({ onLogin }: LoginProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 text-slate-800 font-sans relative overflow-hidden">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-[#03170d] to-slate-950 py-12 px-4 sm:px-6 lg:px-8 text-slate-800 font-sans relative overflow-hidden">
+      {/* Background Interativo 3D Gradient Waves com Paleta do Dashboard Ceruti */}
       <div className="absolute inset-0 w-full h-full z-0 pointer-events-auto">
-        <Prism
-          animationType="rotate"
-          timeScale={0.5}
-          height={3.5}
-          baseWidth={5.5}
-          scale={3.6}
-          hueShift={0}
-          colorFrequency={1}
-          noise={0}
-          glow={1}
+        <GradientWaves
+          horizonColor="#022013"
+          waveColor="#00a83e"
+          crestColor="#d1fae5"
+          speed={0.35}
+          amplitude={2.5}
+          waveScale={0.6}
+          waveRatio={0.9}
+          swell={35}
+          turbulence={20}
+          tilt={1.11}
+          zoom={1.0}
+          height={5.5}
+          fogDepth={15}
+          detail="medium"
+          brightness={1.0}
+          opacity={1.0}
+          mouseInteraction={true}
+          parallaxStrength={0.5}
+          grain={true}
+          grainIntensity={0.04}
         />
       </div>
       
@@ -39,13 +51,13 @@ export function Login({ onLogin }: LoginProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="max-w-md w-full relative z-10 space-y-8 bg-white/90 backdrop-blur-md p-10 rounded-2xl shadow-xl border border-slate-200"
+        className="max-w-md w-full relative z-10 space-y-8 bg-white/95 backdrop-blur-xl p-8 sm:p-10 rounded-3xl shadow-2xl border border-emerald-500/20 ring-1 ring-white/20"
       >
         <div className="text-center">
-          <div className="mx-auto h-24 w-24 flex items-center justify-center mb-4">
+          <div className="mx-auto h-24 w-24 flex items-center justify-center mb-4 drop-shadow-md">
             <Logo className="w-full h-full" />
           </div>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+          <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
             Ceruti
           </h2>
           <p className="mt-2 text-sm text-slate-500 font-medium">

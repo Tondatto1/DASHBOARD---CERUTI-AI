@@ -7,6 +7,9 @@ export default function App() {
     if (typeof window !== 'undefined') {
       try {
         const params = new URLSearchParams(window.location.search);
+        if (params.get('view') === 'login' || params.get('tab') === 'login') {
+          return false;
+        }
         if (params.get('deal') || params.get('tab') || localStorage.getItem('ceruti_logged_in') === 'true') {
           return true;
         }
@@ -29,6 +32,10 @@ export default function App() {
   const handleLogout = () => {
     try {
       localStorage.removeItem('ceruti_logged_in');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('deal');
+      url.searchParams.delete('tab');
+      window.history.replaceState({}, '', url.pathname);
     } catch {
       // ignore
     }
