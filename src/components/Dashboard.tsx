@@ -24,6 +24,7 @@ import {
   CreditCard,
   MessageCircle,
   Mail,
+  Menu,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Salesperson, PlanInfo, ChatMessage } from "../types";
@@ -431,6 +432,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
   const [editWhatsapp, setEditWhatsapp] = useState("");
   const [isEditDDIDropdownOpen, setIsEditDDIDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   const filteredSalespeople = salespeople.filter((s) => {
     const q = searchQuery.toLowerCase().trim();
@@ -724,11 +726,38 @@ export function Dashboard({ onLogout }: DashboardProps) {
           />
         </div>
 
-        <header className="h-16 bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 flex items-center justify-between shadow-sm shrink-0 relative z-10 transition-colors">
+        <header className="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 px-3 sm:px-8 flex items-center justify-between shadow-xs shrink-0 relative z-20 transition-colors">
+          {/* Mobile Header: Hamburger + Logo + Badge */}
           <div className="flex items-center space-x-2 md:hidden">
-            <Logo className="w-8 h-8 shrink-0" />
-            <span className="text-lg font-bold tracking-tight text-slate-900 hidden sm:block">Ceruti</span>
+            <button
+              type="button"
+              onClick={() => setIsMobileDrawerOpen(true)}
+              className="p-2 -ml-1 text-slate-700 hover:text-[#00a83e] hover:bg-slate-100 rounded-xl transition-colors shrink-0"
+              aria-label="Abrir menu de navegação"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="flex items-center space-x-1.5 shrink-0">
+              <Logo className="w-7 h-7 shrink-0" />
+              <span className="text-base font-black tracking-tight text-slate-900 hidden xs:inline">Ceruti</span>
+            </div>
+            <div className="h-4 w-px bg-slate-200 mx-1 hidden xs:block" />
+            <span className="text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-200/80 px-2 py-0.5 rounded-full truncate max-w-[120px] sm:max-w-[200px]">
+              {activeTab === 'visao-geral'
+                ? 'Visão Geral'
+                : activeTab === 'equipe'
+                ? 'Equipe'
+                : activeTab === 'monitoramento'
+                ? 'Monitoramento'
+                : activeTab === 'calendario'
+                ? 'Calendário'
+                : activeTab === 'planos'
+                ? 'Planos'
+                : 'CRM'}
+            </span>
           </div>
+
+          {/* Desktop Header Title */}
           <div className="hidden md:flex items-center space-x-3">
             <button
               type="button"
@@ -757,65 +786,205 @@ export function Dashboard({ onLogout }: DashboardProps) {
                 : 'Gestão de CRM'}
             </h1>
           </div>
-          <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
+
+          {/* Header Action Buttons */}
+          <div className="flex items-center space-x-2 sm:space-x-3 ml-auto">
             {activeTab === 'equipe' && (
               <button
                 onClick={() => setIsModalOpen(true)}
                 disabled={activeCount >= MOCK_PLAN.maxAccesses}
-                className="px-3 sm:px-4 py-2 bg-[#00a83e] text-white rounded-lg text-sm font-semibold shadow-md shadow-emerald-500/20 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-0.5 disabled:bg-slate-300 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex items-center space-x-1 sm:space-x-2"
+                className="px-2.5 sm:px-4 py-1.5 sm:py-2 bg-[#00a83e] text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-emerald-500/20 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-0.5 disabled:bg-slate-300 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex items-center space-x-1 sm:space-x-2"
               >
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Adicionar Colaborador</span>
-                <span className="inline sm:hidden">Adicionar</span>
+                <span className="inline sm:hidden text-xs">Novo</span>
               </button>
             )}
-            <button onClick={onLogout} className="p-2 text-slate-400 hover:text-red-500 transition-colors md:hidden ml-1">
-              <LogOut className="w-5 h-5" />
+
+            <button
+              onClick={onLogout}
+              className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors md:hidden"
+              title="Sair da conta"
+              aria-label="Sair da conta"
+            >
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </header>
 
-        {/* Mobile Tabs */}
-        <div className="flex md:hidden border-b border-slate-200 bg-white/90 backdrop-blur-md shrink-0 relative z-10 overflow-x-auto">
-          <button 
-            onClick={() => setActiveTab('visao-geral')}
-            className={`flex-1 min-w-[90px] py-3 text-xs sm:text-sm font-semibold text-center border-b-2 ${activeTab === 'visao-geral' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
-          >
-            Visão geral
-          </button>
-          <button 
-            onClick={() => setActiveTab('equipe')}
-            className={`flex-1 min-w-[70px] py-3 text-xs sm:text-sm font-semibold text-center border-b-2 ${activeTab === 'equipe' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
-          >
-            Equipe
-          </button>
-          <button 
-            onClick={() => setActiveTab('monitoramento')}
-            className={`flex-1 min-w-[110px] py-3 text-xs sm:text-sm font-semibold text-center border-b-2 ${activeTab === 'monitoramento' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
-          >
-            Monitoramento
-          </button>
-          <button 
-            onClick={() => setActiveTab('calendario')}
-            className={`flex-1 min-w-[90px] py-3 text-xs sm:text-sm font-semibold text-center border-b-2 ${activeTab === 'calendario' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
-          >
-            Calendário
-          </button>
-          <button 
-            onClick={() => setActiveTab('crm')}
-            className={`flex-1 min-w-[70px] py-3 text-xs sm:text-sm font-semibold text-center border-b-2 ${activeTab === 'crm' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
-          >
-            CRM
-          </button>
-          <button 
-            onClick={() => setActiveTab('planos')}
-            className={`flex-1 min-w-[70px] py-3 text-xs sm:text-sm font-semibold text-center border-b-2 ${activeTab === 'planos' ? 'border-[#00a83e] text-[#00a83e]' : 'border-transparent text-slate-500'}`}
-          >
-            Planos
-          </button>
-        </div>
+        {/* Mobile Slide-Over Drawer Navigation */}
+        <AnimatePresence>
+          {isMobileDrawerOpen && (
+            <div className="fixed inset-0 z-50 md:hidden flex">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setIsMobileDrawerOpen(false)}
+                className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs"
+              />
 
-        <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 flex-1 overflow-auto flex flex-col relative z-10">
+              <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "spring", damping: 26, stiffness: 280 }}
+                className="relative w-[300px] max-w-[85vw] bg-white h-full shadow-2xl flex flex-col z-10 overflow-hidden"
+              >
+                {/* Drawer Header */}
+                <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                  <div className="flex items-center space-x-2.5">
+                    <Logo className="w-8 h-8 shrink-0" />
+                    <div>
+                      <span className="font-black text-slate-900 text-base leading-tight block">Ceruti</span>
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-700 bg-emerald-100/70 px-1.5 py-0.2 rounded">Agro CRM</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileDrawerOpen(false)}
+                    className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition-colors"
+                    aria-label="Fechar menu"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* User Card */}
+                <div className="p-4 bg-gradient-to-br from-emerald-50/50 to-slate-50 border-b border-slate-100">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-[#00a83e] text-white font-black text-sm flex items-center justify-center shadow-xs">
+                      A
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-slate-900 text-sm truncate">Admin</h4>
+                      <p className="text-xs text-slate-500 truncate">AgroTech Soluções</p>
+                    </div>
+                  </div>
+                  <div className="bg-white border border-emerald-200/70 rounded-xl p-2.5 flex items-center justify-between text-xs shadow-2xs">
+                    <span className="font-semibold text-slate-600">Acessos ativos</span>
+                    <span className="font-black text-[#00a83e] bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
+                      {activeCount} / {MOCK_PLAN.maxAccesses}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Navigation Items */}
+                <div className="p-3 space-y-1.5 flex-1 overflow-y-auto">
+                  <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                    Módulos
+                  </span>
+
+                  {[
+                    { id: 'visao-geral', label: 'Visão Geral', icon: LayoutDashboard },
+                    { id: 'equipe', label: 'Gestão de Acessos', icon: Users, badge: `${activeCount}/${MOCK_PLAN.maxAccesses}` },
+                    { id: 'monitoramento', label: 'Monitoramento Individual', icon: Activity },
+                    { id: 'crm', label: 'Gestão de CRM', icon: Briefcase, badge: 'Pipeline' },
+                    { id: 'calendario', label: 'Integração de Calendário', icon: Calendar },
+                    { id: 'planos', label: 'Planos e Assinatura', icon: CreditCard, badge: '60% OFF' },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveTab(item.id as any);
+                          setIsMobileDrawerOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between p-3 rounded-xl text-left transition-all ${
+                          isActive
+                            ? 'bg-[#00a83e] text-white font-bold shadow-sm shadow-emerald-500/20'
+                            : 'text-slate-700 hover:bg-slate-100 font-medium'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                          <span className="text-sm">{item.label}</span>
+                        </div>
+                        {item.badge && (
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                              isActive
+                                ? 'bg-white/20 text-white'
+                                : 'bg-emerald-50 text-[#00a83e] border border-emerald-200/60'
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileDrawerOpen(false);
+                      onLogout();
+                    }}
+                    className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-red-600 hover:bg-red-50 font-bold text-xs border border-red-200 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sair do sistema</span>
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Mobile Native Bottom Navigation Bar */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-xl px-1 py-1 flex items-center justify-around">
+          {[
+            { id: 'visao-geral', label: 'Geral', icon: LayoutDashboard },
+            { id: 'equipe', label: 'Equipe', icon: Users },
+            { id: 'monitoramento', label: 'Monitor', icon: Activity },
+            { id: 'crm', label: 'CRM', icon: Briefcase },
+            { id: 'calendario', label: 'Agenda', icon: Calendar },
+            { id: 'planos', label: 'Planos', icon: CreditCard },
+          ].map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveTab(item.id as any)}
+                className={`flex-1 flex flex-col items-center justify-center py-1.5 px-0.5 min-h-[48px] rounded-xl transition-all relative ${
+                  isActive ? 'text-[#00a83e]' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <div
+                  className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all ${
+                    isActive
+                      ? 'bg-emerald-50 text-[#00a83e] scale-105 shadow-2xs font-bold'
+                      : 'text-slate-500'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                </div>
+                <span
+                  className={`text-[9.5px] leading-tight font-bold tracking-tight transition-all mt-0.5 ${
+                    isActive ? 'text-[#00a83e] font-black' : 'text-slate-500'
+                  }`}
+                >
+                  {item.label}
+                </span>
+                {isActive && (
+                  <span className="w-1 h-1 rounded-full bg-[#00a83e] mt-0.5" />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="p-3.5 sm:p-6 md:p-8 pb-24 md:pb-8 space-y-4 sm:space-y-6 md:space-y-8 flex-1 overflow-auto flex flex-col relative z-10">
           {activeTab === 'visao-geral' ? (
             <Overview
               salespeople={salespeople}
@@ -908,7 +1077,174 @@ export function Dashboard({ onLogout }: DashboardProps) {
                   </div>
                 </div>
 
-                <div className="overflow-x-auto flex-1 pb-16">
+                {/* Visualização em Cards Nativos para Mobile */}
+                <div className="block sm:hidden p-3 space-y-3 flex-1 pb-16">
+                  {filteredSalespeople.length === 0 ? (
+                    <div className="py-12 text-center px-4 bg-slate-50/70 rounded-2xl border border-dashed border-slate-200">
+                      <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                      <p className="text-xs font-bold text-slate-700">Nenhum colaborador encontrado</p>
+                      {searchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setSearchQuery("")}
+                          className="text-xs text-[#00a83e] font-bold mt-2 underline"
+                        >
+                          Limpar busca
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    filteredSalespeople.map((person) => (
+                      <div
+                        key={person.id}
+                        className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3 relative"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 font-black text-xs flex items-center justify-center border border-slate-200 shrink-0">
+                              {person.name.charAt(0)}
+                            </div>
+                            <div className="min-w-0">
+                              <h5 className="font-bold text-slate-900 text-sm truncate">{person.name}</h5>
+                              <span
+                                className={`inline-block px-2 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider mt-0.5 ${
+                                  person.status === "Ativo"
+                                    ? "bg-emerald-100 text-[#00a83e]"
+                                    : "bg-slate-100 text-slate-400"
+                                }`}
+                              >
+                                {person.status}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenActionDropdownId(
+                                  openActionDropdownId === person.id ? null : person.id
+                                );
+                              }}
+                              className={`p-2 rounded-xl transition-all inline-flex items-center justify-center ${
+                                openActionDropdownId === person.id
+                                  ? "bg-slate-200 text-slate-900 shadow-xs"
+                                  : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                              }`}
+                              title="Opções do colaborador"
+                              aria-label="Ações do colaborador"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+
+                            <AnimatePresence>
+                              {openActionDropdownId === person.id && (
+                                <>
+                                  <div
+                                    className="fixed inset-0 z-30"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenActionDropdownId(null);
+                                    }}
+                                  />
+                                  <motion.div
+                                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                                    transition={{ duration: 0.12 }}
+                                    className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl shadow-slate-900/15 border border-slate-100 z-40 py-1.5 overflow-hidden text-left"
+                                  >
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenEditEmail(person);
+                                      }}
+                                      className="w-full px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-emerald-50/70 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors group"
+                                    >
+                                      <Mail className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+                                      <span>Alterar E-mail</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenEditWhatsapp(person);
+                                      }}
+                                      className="w-full px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-emerald-50/70 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors group"
+                                    >
+                                      <Pencil className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+                                      <span>Alterar WhatsApp</span>
+                                    </button>
+
+                                    <div className="my-1 border-t border-slate-100" />
+
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenActionDropdownId(null);
+                                        setDeletingPerson(person);
+                                      }}
+                                      className="w-full px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center space-x-2.5 transition-colors group"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5 text-red-500 group-hover:scale-110 transition-transform" />
+                                      <span>Excluir colaborador</span>
+                                    </button>
+                                  </motion.div>
+                                </>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditEmail(person)}
+                            className="flex items-center justify-between w-full text-left py-1 text-slate-600 hover:text-emerald-700 group cursor-pointer"
+                          >
+                            <span className="flex items-center space-x-2 min-w-0">
+                              <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span className="font-mono text-xs text-slate-700 truncate group-hover:text-emerald-700">
+                                {person.email || generateSalespersonEmail(person.name)}
+                              </span>
+                            </span>
+                            <Pencil className="w-3 h-3 text-slate-300 group-hover:text-emerald-600 shrink-0 ml-1" />
+                          </button>
+
+                          <div className="flex items-center justify-between py-1 text-slate-600">
+                            <span className="flex items-center space-x-2">
+                              <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span className="font-mono text-xs text-slate-700">{person.whatsapp}</span>
+                            </span>
+                            <a
+                              href={`https://wa.me/${person.whatsapp.replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[11px] font-bold text-[#00a83e] bg-emerald-50 px-2 py-0.5 rounded-lg hover:bg-emerald-100"
+                            >
+                              Conversar
+                            </a>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-1 text-[11px] text-slate-400">
+                            <span className="flex items-center space-x-1.5">
+                              <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                              <span>Último uso</span>
+                            </span>
+                            <span className="font-medium text-slate-600">{person.lastConversation}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Visualização em Tabela para Desktop e Tablets */}
+                <div className="hidden sm:block overflow-x-auto flex-1 pb-16">
                   <table className="w-full text-left border-collapse min-w-[760px]">
                     <thead className="bg-gray-50 text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b border-slate-100 sticky top-0 z-10">
                       <tr>
@@ -1139,7 +1475,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
       </main>
 
       {/* Botão Flutuante de WhatsApp (67 99819-0294) com mensagem 'Olá, tenho uma dúvida!' */}
-      <div className="fixed bottom-5 right-5 z-40 flex items-center group">
+      <div className="fixed bottom-20 right-4 md:bottom-5 md:right-5 z-40 flex items-center group">
         <a
           href="https://api.whatsapp.com/send?phone=5567998190294&text=Ol%C3%A1%2C%20tenho%20uma%20d%C3%BAvida%21"
           target="_blank"

@@ -176,6 +176,34 @@ export const CRMKanbanView: React.FC<CRMKanbanViewProps> = ({
         </div>
       </div>
 
+      {/* Seletor Rápido de Colunas no Mobile */}
+      <div className="sm:hidden flex items-center space-x-1.5 overflow-x-auto pb-1.5 px-0.5 scrollbar-none">
+        {columns.map((col, idx) => {
+          const colDeals = deals.filter((d) => d.stage === col.key);
+          return (
+            <button
+              key={col.id || col.key}
+              type="button"
+              onClick={() => {
+                if (kanbanScrollRef.current) {
+                  kanbanScrollRef.current.scrollTo({
+                    left: idx * 320,
+                    behavior: 'smooth',
+                  });
+                }
+              }}
+              className="shrink-0 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs text-xs font-bold text-slate-700 flex items-center space-x-1.5 active:scale-95 transition-transform"
+            >
+              <span className={`w-2 h-2 rounded-full ${col.dotColor}`} />
+              <span className="truncate max-w-[100px]">{col.label}</span>
+              <span className="text-[10px] font-black bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded-full">
+                {colDeals.length}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Canvas Scroll com Panning */}
       <div
         ref={kanbanScrollRef}
@@ -189,8 +217,8 @@ export const CRMKanbanView: React.FC<CRMKanbanViewProps> = ({
         style={{ scrollBehavior: isPanning ? "auto" : "smooth" }}
       >
         <div
-          className="flex items-start space-x-5 px-1"
-          style={{ minWidth: `${Math.max(columns.length * 370 + 320, 1200)}px` }}
+          className="flex items-start space-x-3.5 sm:space-x-5 px-1"
+          style={{ minWidth: `${Math.max(columns.length * 320 + 200, 1000)}px` }}
         >
           {columns.map((column, colIndex) => {
             const colDeals = deals.filter((d) => d.stage === column.key);
@@ -202,7 +230,7 @@ export const CRMKanbanView: React.FC<CRMKanbanViewProps> = ({
                 key={column.id || column.key}
                 onDragOver={(e) => handleColumnDragOver(e, column.key)}
                 onDrop={(e) => handleColumnDrop(e, column.key)}
-                className={`w-[360px] sm:w-[380px] shrink-0 rounded-3xl border transition-all flex flex-col max-h-[820px] ${
+                className={`w-[295px] xs:w-[325px] sm:w-[380px] shrink-0 rounded-3xl border transition-all flex flex-col max-h-[820px] ${
                   isColumnOver
                     ? "bg-emerald-50/70 border-[#00a83e] ring-2 ring-[#00a83e]/30 shadow-lg scale-[1.01]"
                     : "bg-slate-100/70 border-slate-200/80 shadow-2xs"

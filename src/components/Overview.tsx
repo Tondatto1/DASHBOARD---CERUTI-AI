@@ -203,7 +203,7 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
         {/* ================= CARD 1: COLABORADORES ATIVOS (SUPER DESTAQUE / HERO CARD) ================= */}
         <motion.div
           variants={itemVariants}
-          className="relative bg-gradient-to-br from-emerald-500/[0.08] via-white to-white rounded-3xl p-7 sm:p-8 border-2 border-emerald-500/50 shadow-sm hover:shadow-xl hover:scale-[1.01] hover:z-10 hover:border-emerald-500 transition-all duration-300 flex flex-col justify-between group overflow-hidden cursor-default min-h-[290px]"
+          className="relative bg-gradient-to-br from-emerald-500/[0.08] via-white to-white rounded-3xl p-5 sm:p-8 border-2 border-emerald-500/50 shadow-sm hover:shadow-xl hover:scale-[1.01] hover:z-10 hover:border-emerald-500 transition-all duration-300 flex flex-col justify-between group overflow-hidden cursor-default min-h-[290px]"
         >
           {/* Luz de destaque superior sutil */}
           <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none -mr-12 -mt-12 group-hover:bg-emerald-400/20 transition-all duration-500" />
@@ -224,7 +224,7 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
 
             <div className="mt-6 mb-2">
               <div className="flex items-baseline">
-                <span className="text-6xl sm:text-7xl font-black text-slate-900 tracking-tight leading-none">
+                <span className="text-5xl sm:text-7xl font-black text-slate-900 tracking-tight leading-none">
                   {activeCount}
                 </span>
                 <span className="text-lg sm:text-xl text-slate-500 font-bold ml-3.5">
@@ -262,7 +262,7 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
         {/* ================= CARD 3: PLANOS DE ARGUMENTOS GERADOS (COM FILTRO DE TEMPO) ================= */}
         <motion.div
           variants={itemVariants}
-          className="bg-white rounded-3xl p-7 sm:p-8 border border-slate-200/80 shadow-sm hover:shadow-xl hover:scale-[1.01] relative hover:z-10 transition-all duration-300 flex flex-col justify-between group cursor-default min-h-[290px]"
+          className="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200/80 shadow-sm hover:shadow-xl hover:scale-[1.01] relative hover:z-10 transition-all duration-300 flex flex-col justify-between group cursor-default min-h-[290px]"
         >
           <div>
             <div className="flex items-start justify-between gap-3">
@@ -401,7 +401,7 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="text-6xl sm:text-7xl font-black text-slate-900 tracking-tight leading-none"
+                  className="text-5xl sm:text-7xl font-black text-slate-900 tracking-tight leading-none"
                 >
                   {currentPlansData.count}
                 </motion.span>
@@ -423,7 +423,7 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
         {/* ================= CARD 2: USARAM NO PERÍODO (COM FILTRO DE TEMPO & LISTAGEM ESCALÁVEL) ================= */}
         <motion.div
           variants={itemVariants}
-          className="bg-white rounded-3xl p-7 sm:p-8 border border-slate-200/80 shadow-sm hover:shadow-xl hover:scale-[1.01] relative hover:z-10 transition-all duration-300 flex flex-col justify-between group cursor-default min-h-[340px]"
+          className="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200/80 shadow-sm hover:shadow-xl hover:scale-[1.01] relative hover:z-10 transition-all duration-300 flex flex-col justify-between group cursor-default min-h-[340px]"
         >
           <div>
             <div className="flex items-start justify-between gap-3">
@@ -668,7 +668,7 @@ export function Overview({ salespeople, maxAccesses, onActivateSalesperson }: Ov
         {/* ================= CARD 4: PRECISAM DE ATENÇÃO (COM LISTA DE COLABORADORES E ALERTA) ================= */}
         <motion.div
           variants={itemVariants}
-          className="bg-white rounded-3xl border border-slate-200/90 shadow-sm hover:scale-[1.01] hover:shadow-xl relative hover:z-10 transition-all duration-300 p-7 sm:p-8 flex flex-col justify-between cursor-default min-h-[290px]"
+          className="bg-white rounded-3xl border border-slate-200/90 shadow-sm hover:scale-[1.01] hover:shadow-xl relative hover:z-10 transition-all duration-300 p-5 sm:p-8 flex flex-col justify-between cursor-default min-h-[290px]"
         >
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b border-slate-100 pb-4">

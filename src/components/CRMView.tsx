@@ -467,24 +467,24 @@ export function CRMView({ salespeople }: CRMViewProps) {
       </AnimatePresence>
 
       {/* Alternador Principal: Funil Comercial vs Integração CRM vs Métricas */}
-      <div className="flex items-center space-x-2 border-b border-slate-200/80 pb-1">
+      <div className="flex items-center space-x-2 border-b border-slate-200/80 pb-1 overflow-x-auto scrollbar-none shrink-0">
         <button
           type="button"
           onClick={() => setActiveTab("pipeline")}
-          className={`py-2 px-4 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center space-x-2 ${
+          className={`py-2 px-3.5 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center space-x-1.5 sm:space-x-2 shrink-0 ${
             activeTab === "pipeline"
               ? "bg-[#00a83e] text-white shadow-xs"
               : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
           }`}
         >
           <Layers className="w-4 h-4" />
-          <span>Funil Comercial & Pipeline</span>
+          <span>Funil & Pipeline</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab("integrations")}
-          className={`py-2 px-4 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center space-x-2 ${
+          className={`py-2 px-3.5 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center space-x-1.5 sm:space-x-2 shrink-0 ${
             activeTab === "integrations"
               ? "bg-[#00a83e] text-white shadow-xs"
               : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -497,7 +497,7 @@ export function CRMView({ salespeople }: CRMViewProps) {
         <button
           type="button"
           onClick={() => setActiveTab("metrics")}
-          className={`py-2 px-4 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center space-x-2 ${
+          className={`py-2 px-3.5 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center space-x-1.5 sm:space-x-2 shrink-0 ${
             activeTab === "metrics"
               ? "bg-[#00a83e] text-white shadow-xs"
               : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
