@@ -44,6 +44,7 @@ export interface ConversationSession {
 export interface Salesperson {
   id: string;
   name: string;
+  email?: string;
   whatsapp: string;
   status: 'Ativo' | 'Inativo';
   messageCount: number;

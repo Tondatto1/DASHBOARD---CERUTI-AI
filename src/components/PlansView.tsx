@@ -7,6 +7,8 @@ import {
   Sparkles,
   Zap,
   ArrowRight,
+  Info,
+  ExternalLink,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { usePressAndHold } from "../hooks/usePressAndHold";
@@ -224,9 +226,6 @@ export function PlansView({
                   <h3 className="text-lg font-bold text-slate-900 leading-tight">
                     Aumentar Colaboradores
                   </h3>
-                  <p className="text-xs text-slate-500 font-medium">
-                    Expanda os acessos dentro do mesmo plano contratado
-                  </p>
                 </div>
               </div>
 
@@ -235,9 +234,20 @@ export function PlansView({
               </span>
             </div>
 
-            <p className="text-xs text-slate-600 mb-6 leading-relaxed">
-              Adicione mais vagas para seus consultores e vendedores. O valor por colaborador segue a taxa do seu plano contratado (<strong>R$ {currentPrice}/mês por vaga</strong>).
-            </p>
+            {/* Informação Mais Importante em Destaque */}
+            <div className="mb-6 p-4 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-slate-800 flex items-start gap-3.5 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                <Info className="w-4 h-4" />
+              </div>
+              <div className="text-xs leading-relaxed">
+                <span className="inline-block text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-200/70 px-2 py-0.5 rounded-md mb-1.5">
+                  Informação Importante
+                </span>
+                <p className="font-bold text-slate-900 text-xs sm:text-[13px] leading-snug">
+                  Será cobrado apenas o período restante da assinatura referente aos colaboradores adicionados. Na renovação seguinte, será cobrado o valor integral correspondente a todos os colaboradores ativos.
+                </p>
+              </div>
+            </div>
 
             {/* Contador Interativo */}
             <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-4">
@@ -343,133 +353,168 @@ export function PlansView({
           {/* Card 1: Mensal (57) */}
           <motion.div
             whileHover={{ y: -4 }}
-            className={`bg-white rounded-3xl p-6 border transition-all flex flex-col justify-between relative ${
+            className={`bg-white rounded-3xl p-6 sm:p-7 border-2 transition-all flex flex-col justify-between relative ${
               selectedPlanId === "mensal"
-                ? "border-2 border-[#00a83e] shadow-lg ring-2 ring-emerald-100"
-                : "border-slate-200/80 shadow-sm hover:border-slate-300"
+                ? "border-[#00a83e] shadow-xl ring-2 ring-emerald-100"
+                : "border-slate-200/90 shadow-md hover:border-emerald-300"
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-black text-slate-900">Mensal</h3>
-                <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-md">
-                  Flexível
+                <h3 className="text-xl font-black text-slate-900">Mensal</h3>
+                <span className="text-xs font-black text-emerald-800 bg-emerald-100 border border-emerald-300/80 px-2.5 py-1 rounded-lg">
+                  60% OFF
                 </span>
               </div>
 
-              <p className="text-xs text-slate-500 min-h-[32px] mb-4">
+              <p className="text-xs text-slate-500 min-h-[32px] mb-4 leading-relaxed">
                 Assinatura mensal sem fidelidade. Cancele ou altere a qualquer momento.
               </p>
 
-              <div className="my-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-center">
-                <span className="text-3xl font-black text-slate-900">R$ 57</span>
-                <span className="text-xs text-slate-500 font-medium block mt-0.5">
+              <div className="my-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center">
+                <div className="flex items-center justify-center gap-2 mb-1.5">
+                  <span className="text-xs text-slate-400 font-semibold line-through">
+                    De R$ 147,50
+                  </span>
+                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md">
+                    Economize 60%
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900">R$ 57</span>
+                </div>
+                <span className="text-xs text-slate-500 font-semibold block mt-1">
                   / mês por colaborador
                 </span>
               </div>
             </div>
 
-            <button
-              type="button"
+            <a
+              href="https://lp.ceruti.ia.br/checkout?agent=campo"
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => handleSelectPlan("mensal")}
-              className={`w-full py-3 px-4 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-                selectedPlanId === "mensal"
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "bg-slate-100 hover:bg-slate-200 text-slate-800"
-              }`}
+              className="w-full py-3.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center space-x-2 cursor-pointer bg-slate-900 hover:bg-slate-800 text-white shadow-md hover:shadow-lg active:scale-[0.98]"
             >
-              {selectedPlanId === "mensal" ? "Plano Selecionado" : "Escolher Mensal"}
-            </button>
+              <span>Escolher Mensal</span>
+              <ArrowRight className="w-4 h-4" />
+            </a>
           </motion.div>
 
           {/* Card 2: Semestral (47) */}
           <motion.div
             whileHover={{ y: -4 }}
-            className={`bg-white rounded-3xl p-6 border transition-all flex flex-col justify-between relative ${
+            className={`bg-white rounded-3xl p-6 sm:p-7 border-2 transition-all flex flex-col justify-between relative ${
               selectedPlanId === "semestral"
-                ? "border-2 border-[#00a83e] shadow-lg ring-2 ring-emerald-100"
-                : "border-slate-200/80 shadow-sm hover:border-slate-300"
+                ? "border-[#00a83e] shadow-xl ring-2 ring-emerald-100"
+                : "border-slate-200/90 shadow-md hover:border-emerald-300"
             }`}
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-black text-slate-900">Semestral</h3>
-                <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-md">
-                  Economia de ~17%
+                <h3 className="text-xl font-black text-slate-900">Semestral</h3>
+                <span className="text-xs font-black text-emerald-900 bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg">
+                  67% OFF
                 </span>
               </div>
 
-              <p className="text-xs text-slate-500 min-h-[32px] mb-4">
+              <p className="text-xs text-slate-500 min-h-[32px] mb-4 leading-relaxed">
                 Compromisso semestral com desconto garantido por vaga.
               </p>
 
-              <div className="my-4 p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100 text-center">
-                <span className="text-3xl font-black text-slate-900">R$ 47</span>
-                <span className="text-xs text-slate-600 font-medium block mt-0.5">
+              <div className="my-4 p-4 bg-emerald-50/70 rounded-2xl border border-emerald-200 text-center">
+                <div className="flex items-center justify-center gap-2 mb-1.5">
+                  <span className="text-xs text-slate-400 font-semibold line-through">
+                    De R$ 147,50
+                  </span>
+                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">
+                    Economize 67%
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900">R$ 47</span>
+                </div>
+                <span className="text-xs text-emerald-900 font-semibold block mt-1">
                   / mês por colaborador
                 </span>
               </div>
             </div>
 
-            <button
-              type="button"
+            <a
+              href="https://lp.ceruti.ia.br/checkout?agent=campo"
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => handleSelectPlan("semestral")}
-              className={`w-full py-3 px-4 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-                selectedPlanId === "semestral"
-                  ? "bg-[#00a83e] text-white shadow-xs"
-                  : "bg-slate-100 hover:bg-slate-200 text-slate-800"
-              }`}
+              className="w-full py-3.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center space-x-2 cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white shadow-md hover:shadow-lg active:scale-[0.98]"
             >
-              {selectedPlanId === "semestral" ? "Plano Selecionado" : "Escolher Semestral"}
-            </button>
+              <span>Escolher Semestral</span>
+              <ArrowRight className="w-4 h-4" />
+            </a>
           </motion.div>
 
-          {/* Card 3: Anual (37) */}
+          {/* Card 3: Anual (37) - Destaque Pulsando Slow */}
           <motion.div
             whileHover={{ y: -4 }}
-            className={`bg-white rounded-3xl p-6 border transition-all flex flex-col justify-between relative ${
-              selectedPlanId === "anual"
-                ? "border-2 border-[#00a83e] shadow-xl ring-4 ring-emerald-100/80"
-                : "border-slate-200/80 shadow-md hover:border-slate-300"
-            }`}
+            animate={{
+              boxShadow: [
+                "0 0 0 0px rgba(0, 168, 62, 0.45), 0 12px 30px -4px rgba(0, 168, 62, 0.2)",
+                "0 0 0 10px rgba(0, 168, 62, 0.15), 0 24px 45px -4px rgba(0, 168, 62, 0.38)",
+                "0 0 0 0px rgba(0, 168, 62, 0.45), 0 12px 30px -4px rgba(0, 168, 62, 0.2)",
+              ],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="bg-gradient-to-b from-emerald-50/50 via-white to-white rounded-3xl p-6 sm:p-7 border-2 border-[#00a83e] transition-all flex flex-col justify-between relative shadow-xl ring-2 ring-emerald-500/30"
           >
-            {/* Tag Destaque */}
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#00a83e] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-xs flex items-center gap-1">
-              <Zap className="w-3 h-3" />
-              Melhor Custo-Benefício
+            {/* Tag Destaque - Melhor Custo-Benefício Bem Destacado */}
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-600 via-[#00a83e] to-emerald-500 text-white text-[11px] font-black uppercase tracking-wider px-4 py-1.5 rounded-full shadow-lg shadow-emerald-600/40 flex items-center gap-1.5 ring-2 ring-white z-20">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300 animate-spin" style={{ animationDuration: '6s' }} />
+              <span className="drop-shadow-xs">Melhor Custo-Benefício</span>
             </div>
 
             <div className="pt-2">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-black text-slate-900">Anual</h3>
-                <span className="text-[11px] font-extrabold text-white bg-emerald-700 px-2.5 py-0.5 rounded-md">
-                  Economia de ~35%
+                <h3 className="text-xl font-black text-slate-900">Anual</h3>
+                <span className="text-xs font-black text-white bg-emerald-600 px-3 py-1 rounded-lg shadow-xs">
+                  74% OFF
                 </span>
               </div>
 
-              <p className="text-xs text-slate-500 min-h-[32px] mb-4">
+              <p className="text-xs text-slate-600 min-h-[32px] mb-4 leading-relaxed font-medium">
                 Maior economia para o seu agronegócio com compromisso anual.
               </p>
 
-              <div className="my-4 p-4 bg-emerald-100/70 rounded-2xl border border-emerald-200 text-center">
-                <span className="text-3xl font-black text-[#00a83e]">R$ 37</span>
-                <span className="text-xs text-emerald-950 font-bold block mt-0.5">
+              <div className="my-4 p-4 bg-emerald-100/90 rounded-2xl border-2 border-emerald-300 text-center shadow-xs">
+                <div className="flex items-center justify-center gap-2 mb-1.5">
+                  <span className="text-xs text-slate-500 font-bold line-through">
+                    De R$ 147,50
+                  </span>
+                  <span className="text-[10px] font-black text-emerald-950 bg-emerald-200/90 px-2 py-0.5 rounded-md">
+                    Economize 74%
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-4xl font-black text-[#00a83e] tracking-tight">R$ 37</span>
+                </div>
+                <span className="text-xs text-emerald-950 font-black block mt-1">
                   / mês por colaborador
                 </span>
               </div>
             </div>
 
-            <button
-              type="button"
+            <a
+              href="https://lp.ceruti.ia.br/checkout?agent=campo"
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => handleSelectPlan("anual")}
-              className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-xs ${
-                selectedPlanId === "anual"
-                  ? "bg-[#00a83e] hover:bg-emerald-700 text-white"
-                  : "bg-slate-900 hover:bg-slate-800 text-white"
-              }`}
+              className="w-full py-3.5 px-4 rounded-xl font-black text-xs transition-all flex items-center justify-center space-x-2 cursor-pointer bg-[#00a83e] hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 text-white shadow-md active:scale-[0.98]"
             >
-              {selectedPlanId === "anual" ? "Plano Selecionado" : "Escolher Anual"}
-            </button>
+              <span>Escolher Anual</span>
+              <ArrowRight className="w-4 h-4" />
+            </a>
           </motion.div>
         </div>
       </div>
